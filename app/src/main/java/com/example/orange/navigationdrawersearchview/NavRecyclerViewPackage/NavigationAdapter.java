@@ -16,9 +16,11 @@ import java.util.List;
 public class NavigationAdapter extends RecyclerView.Adapter<NavigationViewHolder> {
     private List<GitHubUser> mUserList;
     NavRecyclerViewListener mListener;
+    String mTag;
 
-    public NavigationAdapter(List<GitHubUser> userList, NavRecyclerViewListener listener){
+    public NavigationAdapter(List<GitHubUser> userList, NavRecyclerViewListener listener, String tag){
         mUserList=userList;
+        mTag=tag;
         mListener=listener;
     }
 
@@ -27,7 +29,7 @@ public class NavigationAdapter extends RecyclerView.Adapter<NavigationViewHolder
     public NavigationViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View itemView =  LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.navigation_recyclerview_layout, parent, false);
-        return new NavigationViewHolder(itemView, mListener);
+        return new NavigationViewHolder(itemView, mListener, mTag);
     }
 
     @Override

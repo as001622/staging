@@ -11,6 +11,7 @@ public interface MainView {
     void setNavRecyclerViewAdapter(NavigationAdapter adapter);
     void showAlertDialog(String addDialogTitle,String addNewDataToDatabase,String tag);
     void setMainRecyclerViewAdapter (NavigationAdapter adapter);
+    void setMainSearchViewListeners();
     interface LoginDialogClosed{
         void onLoginDialogClosed(String login, String avatarUrl);
     }

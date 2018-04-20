@@ -1,11 +1,11 @@
 package com.example.orange.navigationdrawersearchview.Database;
 
+import com.example.orange.navigationdrawersearchview.Model.GitHubUser;
 
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
 
-
-public class User extends RealmObject {
+public class DeletedFromNavListUser extends RealmObject{
 
     @PrimaryKey
     private String mGitHubLogin;
@@ -13,26 +13,6 @@ public class User extends RealmObject {
     private String mGitHubAvatarUrl;
     private String mGitHubReposUrl;
     private String mUserLogin;
-
-    private Boolean Deleted;
-
-  //  private Boolean huj;
-
-    public Boolean getDeleted() {
-        return Deleted;
-    }
-
-    public void setDeleted(Boolean deleted) {
-        Deleted = deleted;
-    }
-
-    public String getUserLogin() {
-        return mUserLogin;
-    }
-
-    public void setUserLogin(String userLogin) {
-        mUserLogin = userLogin;
-    }
 
     public String getGitHubLogin() {
         return mGitHubLogin;
@@ -62,7 +42,15 @@ public class User extends RealmObject {
         return mGitHubReposUrl;
     }
 
-    public void setGitHubReposUrl(String gitHUbReposUrl) {
-        mGitHubReposUrl = gitHUbReposUrl;
+    public void setGitHubReposUrl(String gitHubReposUrl) {
+        mGitHubReposUrl = gitHubReposUrl;
+    }
+
+    public String getUserLogin() {
+        return mUserLogin;
+    }
+
+    public void setUserLogin(String userLogin) {
+        mUserLogin = userLogin;
     }
 }

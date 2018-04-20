@@ -27,11 +27,18 @@ public class SearchPresenterImpl implements Presenter,
     private Realm mRealm;
 
     private final String addNewDataToDatabase="Do you want to add this Github user to database?";
-    private final String deleteDataFromTheList="Do you want ot delete this Github user from this list forever?";
+    private final String deleteDataFromTheList="Do you want to delete this Github user from this list forever?";
+    private final String collisionDialogTitle ="Are you sure?";
+    private final String collsionDialogMessage ="This user is in your main list! Do you want to delete user from both lists anyway???";
     private final String addDialogTitle="Adding";
     private final String deleteDialogTitle="Deleting";
     private final String NAV_ADD_DIALOG_TAG="NAV_ADD_DIALOG_TAG";
     private final String NAV_DELETE_DIALOG_TAG="NAV_DELETE_DIALOG_TAG";
+    private final String mainDialogMessage="Do you want to delete this Github user from this list?";
+    private final String MAIN_DELETE_DIALOG_TAG="MAIN_DELETE_DIALOG_TAG";
+    private final String COLLISION_DIALOG_TAG="COLLISION DIALOG TAG";
+    public static final String NAV_RECYCLERVIEW_TAG="NAV_RECYCLERVIEW_TAG";
+    public static final String MAIN_RECYCLERVIEW_TAG="MAIN_RECYCLERVIEW_TAG";
     public final String USER_LOGIN="USER LOGIN";
     public final String GUEST_LOGIN="GUESTGUESTGUESTGUESTGUEST";
 
@@ -49,13 +56,19 @@ public class SearchPresenterImpl implements Presenter,
             mApiInteractorImpl.loadData(text, this);
 
     }
+    public void mainSearchViewDataChanged(String query) {
+        if (query.length()>0) {
+            mMainUserList=mDatabaseInteractorImpl.getListForMainSearchView(query);
+            mMainAdapter = new NavigationAdapter(mMainUserList, this,MAIN_RECYCLERVIEW_TAG);
+            mMainView.setMainRecyclerViewAdapter(mMainAdapter);
+        }
 
+    }
 
     @Override
     public void onLoadDataResponseIsSuccesfull(List<GitHubUser> userList) {
         mNavUserList =userList;
-        mNavigationAdapter = new NavigationAdapter(userList, this);
-        mMainView.setNavRecyclerViewAdapter(mNavigationAdapter);
+        setNavAdapter();
     }
 
     @Override
@@ -97,23 +110,35 @@ public class SearchPresenterImpl implements Presenter,
     }
     private void setMainAdapter(String mainLogin){
         mMainUserList=mDatabaseInteractorImpl.getListForMainRecyclerView(mainLogin);
-        mMainAdapter = new NavigationAdapter(mMainUserList, this);
+        mMainAdapter = new NavigationAdapter(mMainUserList, this,MAIN_RECYCLERVIEW_TAG);
         mMainView.setMainRecyclerViewAdapter(mMainAdapter);
+    }
 
+    private void setNavAdapter(){
+        mNavUserList=mDatabaseInteractorImpl.getListForNavRecyclerView(mMainLogin, mNavUserList);
+        mNavigationAdapter = new NavigationAdapter(mNavUserList, this,NAV_RECYCLERVIEW_TAG);
+        mMainView.setNavRecyclerViewAdapter(mNavigationAdapter);
     }
 
     @Override
-    public void onAddButtonClick(String userToAddLogin) {
+    public void onNavAddButtonClick(String userToAddLogin) {
         mLoginToDoSomeInDatabase =userToAddLogin;
         //mMainView.showToast("Adding");
         mMainView.showAlertDialog(addDialogTitle,addNewDataToDatabase,NAV_ADD_DIALOG_TAG);
     }
 
     @Override
-    public void onDeleteButtonClick(String userToDeleteLogin) {
+    public void onNavDeleteButtonClick(String userToDeleteLogin) {
         mLoginToDoSomeInDatabase =userToDeleteLogin;
        // mMainView.showToast("Deleting");
         mMainView.showAlertDialog(deleteDialogTitle,deleteDataFromTheList,NAV_DELETE_DIALOG_TAG);
+    }
+
+    @Override
+    public void onMainDeleteButtonClick(String userToDeleteLogin) {
+        mLoginToDoSomeInDatabase=userToDeleteLogin;
+        mMainView.showAlertDialog(deleteDialogTitle,mainDialogMessage,MAIN_RECYCLERVIEW_TAG);
+
     }
 
 
@@ -121,21 +146,52 @@ public class SearchPresenterImpl implements Presenter,
         if (tag==NAV_ADD_DIALOG_TAG){
             GitHubUser gitHubUser= getUser(mLoginToDoSomeInDatabase);
             mMainView.showToast("Adding confirmation "+ mLoginToDoSomeInDatabase);
-            mDatabaseInteractorImpl.insertNewUser(gitHubUser,mMainLogin, false);
+            mDatabaseInteractorImpl.insertNewUser(gitHubUser,mMainLogin);
+            setMainAdapter(mMainLogin);
 
         }
         else if (tag==NAV_DELETE_DIALOG_TAG){
-            mNavUserList.remove(getUser(mLoginToDoSomeInDatabase));
             GitHubUser gitHubUser= getUser(mLoginToDoSomeInDatabase);
-            mDatabaseInteractorImpl.insertNewUser(gitHubUser,mMainLogin, true);
-            mMainView.showToast("Deleting confirmation "+ mLoginToDoSomeInDatabase);
+            if (!mDatabaseInteractorImpl.getListForMainRecyclerView(mMainLogin).contains(gitHubUser))
+            {
+                mDatabaseInteractorImpl.insertNewDeletedUser(gitHubUser, mMainLogin);
+                setNavAdapter();
+                mMainView.showToast("Deleting confirmation " + mLoginToDoSomeInDatabase);
+            }
+            else{
+                mMainView.showAlertDialog(collisionDialogTitle, collsionDialogMessage, COLLISION_DIALOG_TAG);
+            }
         }
+        else if (tag==COLLISION_DIALOG_TAG)
+        {
+            GitHubUser gitHubUser= getUser(mLoginToDoSomeInDatabase);
+            mDatabaseInteractorImpl.insertNewDeletedUser(gitHubUser,mMainLogin);
+            mDatabaseInteractorImpl.deleteUser(gitHubUser);
+            setNavAdapter();
+            setMainAdapter(mMainLogin);
+
+        }
+        else if (tag==MAIN_RECYCLERVIEW_TAG)
+        {
+            GitHubUser gitHubUser= getUser(mLoginToDoSomeInDatabase);
+            mDatabaseInteractorImpl.deleteUser(gitHubUser);
+            setMainAdapter(mMainLogin);
+            mMainView.showToast(mainDialogMessage+" "+mLoginToDoSomeInDatabase);
+
+        }
+
     }
 
     public GitHubUser getUser(String login){
-        for (GitHubUser user: mNavUserList){
-            if(login==user.getLogin())
-               return user;
+        if (mNavUserList!=null)
+            for (GitHubUser user: mNavUserList){
+                if(login==user.getLogin())
+                    return user;
+            }
+        else
+            for (GitHubUser user: mMainUserList){
+                if(login==user.getLogin())
+                    return user;
         }
         return null;
     }

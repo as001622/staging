@@ -23,15 +23,17 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.orange.navigationdrawersearchview.Login.LoginDialogFragment;
+import com.example.orange.navigationdrawersearchview.NavRecyclerViewPackage.NavRecyclerViewListener;
 import com.example.orange.navigationdrawersearchview.NavRecyclerViewPackage.NavigationAdapter;
 import com.squareup.picasso.Picasso;
 
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
 
+import static android.view.View.GONE;
+
 public class MainActivity extends AppCompatActivity implements MainView,
                                                                NavigationView.OnNavigationItemSelectedListener,
-                                                               SearchView.OnQueryTextListener,
                                                                MainView.LoginDialogClosed{
 
 
@@ -52,6 +54,7 @@ public class MainActivity extends AppCompatActivity implements MainView,
     private String mAvatarUrl;
     private String mNavSearchText;
     private int mNavRecyclerViewScrollState;
+    private SearchView mMainSearchView;
     private Toolbar mToolbar;
     private ActionBar mActionbar;
     private RecyclerView mMainRecyclerView;
@@ -78,6 +81,8 @@ public class MainActivity extends AppCompatActivity implements MainView,
         Realm realm = Realm.getInstance(config);
 
         mToolbar = findViewById(R.id.toolbar);
+        mMainSearchView= findViewById(R.id.toolbar_search);
+
         setSupportActionBar(mToolbar);
         mActionbar = getSupportActionBar();
         mActionbar.setDisplayHomeAsUpEnabled(true);
@@ -92,11 +97,27 @@ public class MainActivity extends AppCompatActivity implements MainView,
             mAvatarUrl=savedInstanceState.getString("Avatar");
             mNavSearchText=savedInstanceState.getString(NAVIGATION_TAG);
             if (mNavSearchText!=null) {
-                onQueryTextChange(mNavSearchText);
+                mSearchPresenterImpl.navSearchViewDataChanged(mNavSearchText);
             }
             if (getSupportFragmentManager().findFragmentByTag(getText(R.string.dialog_tag).toString())==null)
                 onLoginDialogClosed(mLogin, mAvatarUrl);
         }
+
+    }
+
+    public void setMainSearchViewListeners() {
+        mMainSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                mSearchPresenterImpl.mainSearchViewDataChanged(newText);
+                return true;
+            }
+        });
     }
 
     @Override
@@ -120,8 +141,9 @@ public class MainActivity extends AppCompatActivity implements MainView,
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.toolbar_menu, menu);
         MenuItem searchItem = menu.findItem(R.id.toolbar_search);
-        SearchView toolbarSearch =
+        mMainSearchView =
                 (SearchView) searchItem.getActionView();
+        setMainSearchViewListeners();
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -150,30 +172,31 @@ public class MainActivity extends AppCompatActivity implements MainView,
         super.onSaveInstanceState(outState);
     }
 
-   @Override
-    public boolean onQueryTextSubmit(String query) {
-        View view = this.getCurrentFocus(); //to show nice keyboard on landscapemode
-        if (view != null) {
-            InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
-            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-        }
-        return false;
-    }
-
-    @Override
-    public boolean onQueryTextChange(String newText) {
-            if (newText.length() == 0)
-                setNavRecyclerViewAdapter(null);
-            mNavSearchText=newText;
-            mSearchPresenterImpl.navSearchViewDataChanged(newText);
-        return true;
-    }
 
     public void setNavSearchView() {
         SearchView searchView = mNavigationView.getHeaderView(0).findViewById(R.id.nav_search);
         if (searchView != null) {
             mNavSearchView=searchView;
-            mNavSearchView.setOnQueryTextListener(this);
+            mNavSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                @Override
+                public boolean onQueryTextSubmit(String query) {
+                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(
+                            mNavSearchView.getWindowToken(), 0);
+                    if (query.length()<3)
+                        mNavRecyclerView=null;
+                    return false;
+                }
+
+                @Override
+                public boolean onQueryTextChange(String newText) {
+                    if (newText.length() < 3)
+                        mNavRecyclerView=null;
+                    mNavSearchText=newText;
+                    mSearchPresenterImpl.navSearchViewDataChanged(newText);
+                    return true;
+                }
+            });
         }
     }
 
@@ -183,6 +206,7 @@ public class MainActivity extends AppCompatActivity implements MainView,
         setNavRecyclerViewPosition();
         mNavRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         mNavRecyclerView.setAdapter(adapter);
+        mNavRecyclerView.setVisibility(View.VISIBLE);
     }
 
     public void setMainRecyclerViewAdapter (NavigationAdapter adapter) {
@@ -259,11 +283,8 @@ public class MainActivity extends AppCompatActivity implements MainView,
 
     @Override
     public void onLoginDialogClosed(String login, String avatarUrl) {
-
         mLogin=login;
         mAvatarUrl=avatarUrl;
         mSearchPresenterImpl.activityStarted(login,avatarUrl);
-
     }
-
 }

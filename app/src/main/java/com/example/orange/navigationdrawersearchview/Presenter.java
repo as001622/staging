@@ -11,4 +11,6 @@ public interface Presenter {
     void navLogoutPressed();
 
     void navLoginPressed();
+
+    void mainSearchViewDataChanged(String text);
 }

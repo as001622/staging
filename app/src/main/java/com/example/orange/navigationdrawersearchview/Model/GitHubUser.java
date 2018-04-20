@@ -82,4 +82,18 @@ public class GitHubUser {
                 +" "+getLogin().toString()+" "+
                 getReposUrl().toString();
     }
+
+    @Override
+    public boolean equals(Object obj) {
+
+        try {
+            GitHubUser gitHubUser  = (GitHubUser) obj;
+            return mLogin.equals(gitHubUser.getLogin());
+        }
+        catch (Exception e)
+        {
+            return false;
+        }
+
+    }
 }
