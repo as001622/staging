@@ -2,11 +2,10 @@ package com.example.orange.navigationdrawersearchview.Login;
 
 import com.example.orange.navigationdrawersearchview.GitHubApi.ApiInteractorImpl;
 import com.example.orange.navigationdrawersearchview.Model.GitHubUser;
-import com.example.orange.navigationdrawersearchview.GitHubApi.Interactor;
-import com.example.orange.navigationdrawersearchview.SearchPresenterImpl;
+import com.example.orange.navigationdrawersearchview.GitHubApi.ApiInteractor;
 
 public class LoginDialogPresenterImpl implements LoginDialogPresenter,
-        Interactor.OnLoginProccesed {
+        ApiInteractor.OnLoginProccesed {
 
     private LoginDialogView mDialogView;
     private ApiInteractorImpl mApiInteractorImpl;
@@ -17,7 +16,7 @@ public class LoginDialogPresenterImpl implements LoginDialogPresenter,
     public final String DIALOG_FAILURE="Login failure!!!";
     public final String DIALOG_LOGIN_SUCCESFULL="You have logged in!!!";
 
-    public LoginDialogPresenterImpl(LoginDialogView dialogView, SearchPresenterImpl searchPresenterImpl){
+    public LoginDialogPresenterImpl(LoginDialogView dialogView){
         mDialogView=dialogView;
         mApiInteractorImpl = new ApiInteractorImpl();
     }
@@ -45,17 +44,20 @@ public class LoginDialogPresenterImpl implements LoginDialogPresenter,
     @Override
     public void onLoginResponseIsSuccesfull(GitHubUser gitHubUser) {
         mDialogView.showToast(DIALOG_LOGIN_SUCCESFULL);
+        mDialogView.setResponseSent(false);
         mDialogView.loginDialogClose(gitHubUser.getLogin(),gitHubUser.getAvatarUrl());
     }
 
     @Override
     public void onLoginResponseIsNotSuccesfull() {
         mDialogView.showToast(DIALOG_WRONG);
+        mDialogView.setResponseSent(false);
 
     }
 
     @Override
     public void onLoginFailure(Throwable t) {
         mDialogView.showToast(DIALOG_FAILURE+" "+t.getMessage());
+        mDialogView.setResponseSent(false);
     }
 }

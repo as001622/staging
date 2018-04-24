@@ -18,18 +18,22 @@ public class DatabaseInteractorImpl implements DatabaseInteractor{
         mRealm=realm;
     }
 
+
     public List<GitHubUser> getListForMainRecyclerView(String login){
         List<GitHubUser> gitHubUserList = new ArrayList<>();
         RealmResults<User> result = mRealm.where(User.class)
                 .equalTo("mUserLogin",login)
+                .and()
+                .equalTo("mDeletedFromMainList",false)
+                .and()
+                .equalTo("mDeletedFromNavList",false)
                 .findAllAsync();
         result.load();
         if (result.size()!=0)
             for (User user:result){
                 gitHubUserList.add(getGitHubUser(user));
             }
-
-
+        Log.v("ZHZH first", result.toString());
         return gitHubUserList;
     }
 
@@ -37,28 +41,32 @@ public class DatabaseInteractorImpl implements DatabaseInteractor{
         List<GitHubUser> gitHubUserList = new ArrayList<>();
         RealmResults<User> result = mRealm.where(User.class)
                 .beginsWith("mGitHubLogin",query, Case.INSENSITIVE)
+                .and()
+                .equalTo("mDeletedFromMainList",false)
+                .and()
+                .equalTo("mDeletedFromNavList",false)
                 .findAllAsync();
         result.load();
         if (result.size()!=0)
             for (User user:result){
                 gitHubUserList.add(getGitHubUser(user));
             }
-
-        Log.v("ZHZH first", result.toString());
         return gitHubUserList;
     }
 
     public List<GitHubUser> getListForNavRecyclerView(String login,List<GitHubUser> gitHubUserList){
         List<GitHubUser> deletedGitHubUserList = new ArrayList<>();
 
-        RealmResults<DeletedFromNavListUser> result = mRealm.where(DeletedFromNavListUser.class)
+        RealmResults<User> result = mRealm.where(User.class)
                 .equalTo("mUserLogin",login)
+                .and()
+                .equalTo("mDeletedFromNavList",true)
                 .findAllAsync();
         result.load();
 
         if (result.size()!=0)
-            for (DeletedFromNavListUser deletedUser:result){
-                deletedGitHubUserList.add(getGitHubUser(deletedUser));
+            for (User user:result){
+                deletedGitHubUserList.add(getGitHubUser(user));
             }
         gitHubUserList.removeAll(deletedGitHubUserList);
         return gitHubUserList;
@@ -72,6 +80,8 @@ public class DatabaseInteractorImpl implements DatabaseInteractor{
         user.setGitHubReposUrl(gitHubUser.getReposUrl());
         user.setGitHubAvatarUrl(gitHubUser.getAvatarUrl());
         user.setGitHubId(gitHubUser.getId());
+        user.setDeletedFromMainList(false);
+        user.setDeletedFromNavList(false);
         user.setUserLogin(login);
         mRealm.insertOrUpdate(user);
         mRealm.commitTransaction();
@@ -80,15 +90,16 @@ public class DatabaseInteractorImpl implements DatabaseInteractor{
     public void insertNewDeletedUser(GitHubUser gitHubUser, String login){
 
         mRealm.beginTransaction();
-        DeletedFromNavListUser deletedUser = new DeletedFromNavListUser();;
+        User deletedUser = new User();;
         deletedUser.setGitHubLogin(gitHubUser.getLogin());
         deletedUser.setGitHubReposUrl(gitHubUser.getReposUrl());
         deletedUser.setGitHubAvatarUrl(gitHubUser.getAvatarUrl());
         deletedUser.setGitHubId(gitHubUser.getId());
+        deletedUser.setDeletedFromNavList(true);
+        deletedUser.setDeletedFromMainList(false);
         deletedUser.setUserLogin(login);
         mRealm.insertOrUpdate(deletedUser);
         mRealm.commitTransaction();
-
     }
 
     public void deleteUser(final GitHubUser gitHubUser)
@@ -97,6 +108,7 @@ public class DatabaseInteractorImpl implements DatabaseInteractor{
         mRealm.executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
+                        Log.v("ZHZH delete", gitHubUser.toString());
                         mRealm.where(User.class)
                         .equalTo("mGitHubLogin",gitHubUser.getLogin())
                         .findFirst().deleteFromRealm();
@@ -111,14 +123,5 @@ public class DatabaseInteractorImpl implements DatabaseInteractor{
         gitHubUser.setLogin(user.getGitHubLogin());
         gitHubUser.setReposUrl(user.getGitHubReposUrl());
             return gitHubUser;
-    }
-
-    private GitHubUser getGitHubUser(DeletedFromNavListUser user){
-        GitHubUser gitHubUser = new GitHubUser();
-        gitHubUser.setAvatarUrl(user.getGitHubAvatarUrl());
-        gitHubUser.setId(user.getGitHubId());
-        gitHubUser.setLogin(user.getGitHubLogin());
-        gitHubUser.setReposUrl(user.getGitHubReposUrl());
-        return gitHubUser;
     }
 }

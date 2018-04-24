@@ -20,18 +20,15 @@ import com.example.orange.navigationdrawersearchview.SearchPresenterImpl;
 
 public class LoginDialogFragment extends DialogFragment implements LoginDialogView {
 
-    private EditText mUsernameTextView;
-    private EditText mPasswordView;
-    private TextView mHelloTextView;
+
     private LayoutInflater mLayoutInflater;
     private AlertDialog.Builder builder;
     private View mView;
+
+
     private String retrofitTag="check";
-    private String mUsername;
-    private String mPassword;
-    private ProgressBar mProgressBar;
+    private Boolean mResponseSent=false;
     private LoginDialogPresenterImpl mLoginDialogPresenterImpl;
-    private SearchPresenterImpl mSearchPresenterImpl;
 
 
     @NonNull
@@ -41,7 +38,7 @@ public class LoginDialogFragment extends DialogFragment implements LoginDialogVi
         builder = new AlertDialog.Builder(getActivity());
         mLayoutInflater = getActivity().getLayoutInflater();
         Log.v(retrofitTag,"OnCreateDialog");
-        mLoginDialogPresenterImpl =new LoginDialogPresenterImpl(this, mSearchPresenterImpl);
+        mLoginDialogPresenterImpl =new LoginDialogPresenterImpl(this);
 
         mView = mLayoutInflater.inflate(R.layout.dialogfragment_login, null);
 
@@ -62,6 +59,11 @@ public class LoginDialogFragment extends DialogFragment implements LoginDialogVi
         setOnButtonClickListeners();
     }
 
+
+    public void setResponseSent(Boolean responseSent) {
+        mResponseSent = responseSent;
+    }
+
     @Override
     public void onDestroy(){
         super.onDestroy();
@@ -77,15 +79,18 @@ public class LoginDialogFragment extends DialogFragment implements LoginDialogVi
         positiveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if (!mResponseSent) {
+                    mResponseSent=true;
 
-                Dialog dialogView = getDialog();
+                    Dialog dialogView = getDialog();
 
-                EditText userTextView = (EditText) dialogView.findViewById(R.id.username);
-                EditText passwordTextView = (EditText) dialogView.findViewById(R.id.password);
+                    EditText userTextView = (EditText) dialogView.findViewById(R.id.username);
+                    EditText passwordTextView = (EditText) dialogView.findViewById(R.id.password);
 
-                String username = userTextView.getText().toString();
-                String password = passwordTextView.getText().toString();
-                mLoginDialogPresenterImpl.loginPositiveButtonClicked(username, password);
+                    String username = userTextView.getText().toString();
+                    String password = passwordTextView.getText().toString();
+                    mLoginDialogPresenterImpl.loginPositiveButtonClicked(username, password);
+                }
 
             }
         });

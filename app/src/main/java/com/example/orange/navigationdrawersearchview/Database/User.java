@@ -14,16 +14,23 @@ public class User extends RealmObject {
     private String mGitHubReposUrl;
     private String mUserLogin;
 
-    private Boolean Deleted;
+    private Boolean mDeletedFromNavList;
+    private Boolean mDeletedFromMainList;
 
-  //  private Boolean huj;
-
-    public Boolean getDeleted() {
-        return Deleted;
+    public Boolean getDeletedFromNavList() {
+        return mDeletedFromNavList;
     }
 
-    public void setDeleted(Boolean deleted) {
-        Deleted = deleted;
+    public void setDeletedFromNavList(Boolean deletedFromNavList) {
+        mDeletedFromNavList = deletedFromNavList;
+    }
+
+    public Boolean getDeletedFromMainList() {
+        return mDeletedFromMainList;
+    }
+
+    public void setDeletedFromMainList(Boolean deletedFromMainList) {
+        mDeletedFromMainList = deletedFromMainList;
     }
 
     public String getUserLogin() {

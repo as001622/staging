@@ -2,17 +2,20 @@ package com.example.orange.navigationdrawersearchview;
 
 import com.example.orange.navigationdrawersearchview.Database.DatabaseInteractorImpl;
 import com.example.orange.navigationdrawersearchview.GitHubApi.ApiInteractorImpl;
-import com.example.orange.navigationdrawersearchview.GitHubApi.Interactor;
+import com.example.orange.navigationdrawersearchview.GitHubApi.ApiInteractor;
 import com.example.orange.navigationdrawersearchview.Model.GitHubUser;
 import com.example.orange.navigationdrawersearchview.NavRecyclerViewPackage.NavRecyclerViewListener;
 import com.example.orange.navigationdrawersearchview.NavRecyclerViewPackage.NavigationAdapter;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.List;
 
 import io.realm.Realm;
 
 public class SearchPresenterImpl implements Presenter,
-                                        Interactor.OnLoadDataFinished,
+                                        ApiInteractor.OnLoadDataFinished,
                                         NavRecyclerViewListener {
 
     private MainView mMainView;
@@ -52,21 +55,30 @@ public class SearchPresenterImpl implements Presenter,
     }
 
     public void navSearchViewDataChanged(String text) {
-        if (text.length() > 2)
+        if (text==null)
+        {
+            mMainView.setNavRecyclerViewAdapter(null);
+        }
+        else if (text.length()>1) {
             mApiInteractorImpl.loadData(text, this);
-
+        }
+        else {
+            mMainView.setNavRecyclerViewAdapter(null);
+        }
     }
+
     public void mainSearchViewDataChanged(String query) {
         if (query.length()>0) {
             mMainUserList=mDatabaseInteractorImpl.getListForMainSearchView(query);
             mMainAdapter = new NavigationAdapter(mMainUserList, this,MAIN_RECYCLERVIEW_TAG);
             mMainView.setMainRecyclerViewAdapter(mMainAdapter);
         }
-
+        else setMainAdapter(mMainLogin);
     }
 
     @Override
     public void onLoadDataResponseIsSuccesfull(List<GitHubUser> userList) {
+        mMainView.showToast("Data loaded");
         mNavUserList =userList;
         setNavAdapter();
     }
@@ -78,7 +90,7 @@ public class SearchPresenterImpl implements Presenter,
     }
 
     @Override
-    public void onLoadDataFailure(String message) {
+    public void onLoadDataFailure(String message) throws JSONException {
         mMainView.showToast("Response failure: " + message);
     }
 
@@ -98,12 +110,12 @@ public class SearchPresenterImpl implements Presenter,
         {
             mMainLogin=GUEST_LOGIN;
             mMainView.setUserAsGuest();
-            mMainView.showToast(GUEST_LOGIN);
+            //mMainView.showToast(GUEST_LOGIN);
             setMainAdapter(mMainLogin);
         }
         else{
             mMainLogin=login;
-            mMainView.showToast(login+login+login);
+            //mMainView.showToast(login+login+login);
             mMainView.setUser(login, avatarArl);
             setMainAdapter(mMainLogin);
         }
@@ -117,6 +129,7 @@ public class SearchPresenterImpl implements Presenter,
     private void setNavAdapter(){
         mNavUserList=mDatabaseInteractorImpl.getListForNavRecyclerView(mMainLogin, mNavUserList);
         mNavigationAdapter = new NavigationAdapter(mNavUserList, this,NAV_RECYCLERVIEW_TAG);
+        mMainView.showToast(String.valueOf(mNavigationAdapter.getItemCount()));
         mMainView.setNavRecyclerViewAdapter(mNavigationAdapter);
     }
 
@@ -156,6 +169,7 @@ public class SearchPresenterImpl implements Presenter,
             {
                 mDatabaseInteractorImpl.insertNewDeletedUser(gitHubUser, mMainLogin);
                 setNavAdapter();
+                setMainAdapter(mMainLogin);
                 mMainView.showToast("Deleting confirmation " + mLoginToDoSomeInDatabase);
             }
             else{
@@ -166,13 +180,13 @@ public class SearchPresenterImpl implements Presenter,
         {
             GitHubUser gitHubUser= getUser(mLoginToDoSomeInDatabase);
             mDatabaseInteractorImpl.insertNewDeletedUser(gitHubUser,mMainLogin);
-            mDatabaseInteractorImpl.deleteUser(gitHubUser);
             setNavAdapter();
             setMainAdapter(mMainLogin);
 
         }
         else if (tag==MAIN_RECYCLERVIEW_TAG)
         {
+
             GitHubUser gitHubUser= getUser(mLoginToDoSomeInDatabase);
             mDatabaseInteractorImpl.deleteUser(gitHubUser);
             setMainAdapter(mMainLogin);
@@ -183,15 +197,20 @@ public class SearchPresenterImpl implements Presenter,
     }
 
     public GitHubUser getUser(String login){
+        boolean found=false;
         if (mNavUserList!=null)
             for (GitHubUser user: mNavUserList){
-                if(login==user.getLogin())
+                if(login == user.getLogin()) {
+                    found=true;
                     return user;
+                }
             }
-        else
-            for (GitHubUser user: mMainUserList){
-                if(login==user.getLogin())
+        if(!found) {
+            for (GitHubUser user : mMainUserList) {
+                if (login == user.getLogin()) {
                     return user;
+                }
+            }
         }
         return null;
     }
