@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">NavigationDrawerSearchView</string>
+    <string name="nav_search_hint">Search new User</string>
+    <string name="nav_logout">Logout</string>
+    <string name="nav_title">Navigation Drawer</string>
+    <string name="dialog_username_hint">Github Login</string>
+    <string name="dialog_password_hint">Github password</string>
+    <string name="dialog_title">Login dialog</string>
+    <string name="dialog_confirm_button">Login</string>
+    <string name="dialog_cancel_button">Continue as a guest</string>
+    <string name="dialog_tag">Dialog</string>
+    <string name="dialog_username_warning">Enter login!!!</string>
+    <string name="dialog_password_warning">Enter password!!!</string>
+    <string name="alert_ok">Yes</string>
+    <string name="alert_cancel">No</string>
+</resources>

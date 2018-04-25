@@ -28,4 +28,7 @@ public interface ApiService
 
     @GET()
     Call<GitHubUsersFeed> search(@Url String url);
+
+    @GET()
+    Call<GitHubUsersFeed> searchUsers(@Url String url,@Query("page") Integer page,@Query("per_page") Integer per_page);
 }
