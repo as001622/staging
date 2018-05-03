@@ -1,6 +1,7 @@
 package com.example.orange.navigationdrawersearchview.Presenter;
 
 public interface Constants {
+
     public static final String QUERY_HINT="Search new Users!!!!!";
     public static final String NAVIGATION_SEARCH_TAG ="Navigation search";
     public static final String MAIN_SEARCH_TAG="Main search";
@@ -25,6 +26,7 @@ public interface Constants {
     public static final String MAIN_RECYCLERVIEW_TAG="MAIN_RECYCLERVIEW_TAG";
     public static final String USER_LOGIN="USER LOGIN";
     public static final String GUEST_LOGIN="GUESTGUESTGUESTGUESTGUEST";
+    public static final String GITHUBUSER_LOGIN="GITHUBUSERLOGIN";
     public static final String GUEST_TEXT="GUEST";
     public static final String EMPTY_STRING="";
     public static final String RESPONSE_UNSUCCESFULL="Response is unsuccesfull: ";
@@ -53,7 +55,9 @@ public interface Constants {
     public static final String HEADER_STATUS_FIELD="Status";
     public static final String STATUS_FIELD_CONTAINS_403ERROR="403";
     public static final String ON403_MESSAGE="Forbidden! Rate limit exceeded!!!";
-    public static final Integer loadPerPage=10;
+    public static final Integer loadPerPage=20;
     public static final Integer firstPage=1;
+    public static final String LOAD_MORE_DATA_TAG="LOAD_MORE_DATA_TAG";
+    public static final String LOAD_DATA_FIRST_TIME_TAG="LOAD_DATA_FIRST_TIME_TAG";
 
 }

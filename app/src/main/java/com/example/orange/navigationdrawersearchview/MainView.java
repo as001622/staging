@@ -1,6 +1,6 @@
 package com.example.orange.navigationdrawersearchview;
 
-import com.example.orange.navigationdrawersearchview.NavRecyclerViewPackage.BaseAdapter;
+import com.example.orange.navigationdrawersearchview.NavRecyclerView.BaseAdapter;
 
 public interface MainView {
     void showToast(String text);
@@ -11,7 +11,8 @@ public interface MainView {
     void setNavRecyclerViewAdapter(BaseAdapter adapter);
     void showAlertDialog(String addDialogTitle,String addNewDataToDatabase,String tag);
     void setMainRecyclerViewAdapter (BaseAdapter adapter);
-    void setMainSearchViewListeners();
+    void setMainSearchView();
+    void gitHubUserActivityStart(String login);
     interface LoginDialogClosed{
         void onLoginDialogClosed(String login, String password, String avatarUrl);
     }

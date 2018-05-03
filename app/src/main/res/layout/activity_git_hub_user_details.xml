@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingLeft="10dp"
+    android:paddingRight="10dp"
+    tools:context=".DetailsActivity.GitHubUserDetailsActivity">
+
+    <ImageView
+        android:id="@+id/details_avatar_image"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        android:layout_marginTop="16dp"
+        android:src="@drawable/githublogo"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/details_user_login_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/details_font"
+        android:text="USER LOGIN:   "
+        app:layout_constraintBottom_toTopOf="@+id/details_user_name_text"
+        app:layout_constraintStart_toStartOf="@+id/details_user_name_text"
+        app:layout_constraintTop_toBottomOf="@+id/details_avatar_image" />
+
+    <TextView
+        android:id="@+id/details_user_login"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/details_font"
+        android:text=""
+        app:layout_constraintBottom_toTopOf="@+id/details_user_name"
+        app:layout_constraintStart_toStartOf="@+id/details_user_name"
+        app:layout_constraintTop_toBottomOf="@+id/details_avatar_image" />
+
+
+    <TextView
+        android:id="@+id/details_email_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/details_font"
+        android:text="EMAIL:"
+        app:layout_constraintBottom_toTopOf="@+id/details_blog_text"
+        app:layout_constraintStart_toStartOf="@+id/details_blog_text"
+        app:layout_constraintTop_toBottomOf="@+id/details_user_name_text" />
+
+    <TextView
+        android:id="@+id/details_email"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/details_font"
+        android:text=""
+        app:layout_constraintBottom_toTopOf="@+id/details_blog"
+        app:layout_constraintStart_toStartOf="@+id/details_blog"
+        app:layout_constraintTop_toBottomOf="@+id/details_user_name" />
+
+
+    <TextView
+        android:id="@+id/details_user_name_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/details_font"
+        android:text="USER NAME:   "
+        app:layout_constraintBottom_toTopOf="@+id/details_email_text"
+        app:layout_constraintStart_toStartOf="@+id/details_email_text"
+        app:layout_constraintTop_toBottomOf="@+id/details_user_login_text" />
+
+    <TextView
+        android:id="@+id/details_user_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/details_font"
+        android:text=""
+        app:layout_constraintBottom_toTopOf="@+id/details_email"
+        app:layout_constraintStart_toStartOf="@+id/details_email"
+        app:layout_constraintTop_toBottomOf="@+id/details_user_login" />
+
+    <TextView
+        android:id="@+id/details_blog_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/details_font"
+        android:text="BLOG:   "
+        app:layout_constraintBottom_toTopOf="@+id/details_company_text"
+        app:layout_constraintStart_toStartOf="@+id/details_company_text"
+        app:layout_constraintTop_toBottomOf="@+id/details_email_text" />
+
+    <TextView
+        android:id="@+id/details_blog"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/details_font"
+        android:text=""
+        app:layout_constraintBottom_toTopOf="@+id/details_company"
+        app:layout_constraintStart_toStartOf="@+id/details_company"
+        app:layout_constraintTop_toBottomOf="@+id/details_email" />
+
+
+    <TextView
+        android:id="@+id/details_company_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/details_font"
+        android:text="COMPANY:   "
+        app:layout_constraintBottom_toTopOf="@+id/details_followers_text"
+        app:layout_constraintStart_toStartOf="@+id/details_followers_text"
+        app:layout_constraintTop_toBottomOf="@+id/details_blog_text" />
+
+    <TextView
+        android:id="@+id/details_company"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/details_font"
+        android:text=""
+        app:layout_constraintBottom_toTopOf="@+id/details_followers"
+        app:layout_constraintStart_toStartOf="@+id/details_followers"
+        app:layout_constraintTop_toBottomOf="@+id/details_blog" />
+
+
+    <TextView
+        android:id="@+id/details_followers_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:fontFamily="@font/details_font"
+        android:text="FOLLOWERS:   "
+        app:layout_constraintBottom_toTopOf="@+id/details_back_button"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/details_company_text" />
+
+    <TextView
+        android:id="@+id/details_followers"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:layout_marginStart="8dp"
+        android:fontFamily="@font/details_font"
+        android:text=""
+        app:layout_constraintBottom_toTopOf="@+id/details_back_button"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/details_followers_text"
+        app:layout_constraintTop_toBottomOf="@+id/details_company" />
+
+    <Button
+        android:id="@+id/details_back_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:onClick="detailsOnOkButtonClick"
+        android:text="Ok"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/details_followers_text"
+        tools:ignore="OnClick" />
+
+
+</android.support.constraint.ConstraintLayout>

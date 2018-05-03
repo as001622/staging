@@ -5,8 +5,8 @@ import com.example.orange.navigationdrawersearchview.Model.GitHubUser;
 import java.util.List;
 
 public interface DatabaseInteractor {
-    List<GitHubUser> getListForMainRecyclerView(String login);
-    List<GitHubUser> getListForNavRecyclerView(String login,List<GitHubUser> gitHubUserList);
-    void insertNewUser(GitHubUser gitHubUser, String login);
+    List<GitHubUser> getListForMainRecyclerView();
+    List<GitHubUser> getListForNavRecyclerView(List<GitHubUser> gitHubUserList);
+    void insertNewUser(GitHubUser gitHubUser);
     void deleteUser(GitHubUser gitHubUser);
 }

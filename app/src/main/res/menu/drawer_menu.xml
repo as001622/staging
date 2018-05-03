@@ -5,12 +5,16 @@
 
         <item
             android:id="@+id/nav_logout"
-            android:icon="@drawable/login_out48"
+            android:icon="@drawable/if_logout"
+            android:fitsSystemWindows="true"
+            android:scaleType="centerInside"
             android:title="@string/nav_logout"
             android:visible="false"/>
         <item
+            android:fitsSystemWindows="true"
+            android:scaleType="centerInside"
             android:id="@+id/nav_login"
-            android:icon="@drawable/login_in48"
+            android:icon="@drawable/if_login"
             android:title="@string/dialog_confirm_button"
             android:visible="false"/>
 

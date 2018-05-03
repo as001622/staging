@@ -10,6 +10,7 @@ import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.PartMap;
+import retrofit2.http.Path;
 import retrofit2.http.Query;
 import retrofit2.http.Url;
 
@@ -19,12 +20,12 @@ public interface ApiService
     Call<List<GitHubUser>> getUsers();
 
     @GET("user")
-    Call<GitHubUser> getUserDetails(@Header("Authorization") String credentials);
+    Call<GitHubUser> authorithation(@Header("Authorization") String credentials);
 
 
     //https://api.github.com/search/users?q=100+in:login
-    @GET("search/users/")
-    Call<GitHubUsersFeed> searchUsers(@Query("q") String url, @PartMap Map<String, String> params);
+    @GET("users/{user}")
+    Call<GitHubUser> getUserDetails(@Path("user") String userLogin);
 
     @GET()
     Call<GitHubUsersFeed> search(@Url String url);

@@ -2,6 +2,8 @@ package com.example.orange.navigationdrawersearchview.Database;
 
 
 import io.realm.RealmObject;
+import io.realm.RealmResults;
+import io.realm.annotations.LinkingObjects;
 import io.realm.annotations.PrimaryKey;
 
 
@@ -12,33 +14,27 @@ public class User extends RealmObject {
     private Integer mGitHubId;
     private String mGitHubAvatarUrl;
     private String mGitHubReposUrl;
-    private String mUserLogin;
 
-    private Boolean mDeletedFromNavList;
-    private Boolean mFoundForNavList;
+    @LinkingObjects("mAddedUsers") // <-- !
+    private final RealmResults<ApplicationUser> ownersOfAdded = null;
 
-    public Boolean getDeletedFromNavList() {
-        return mDeletedFromNavList;
+    @LinkingObjects("mDeletedUsers") // <-- !
+    private final RealmResults<ApplicationUser> ownersOfDeleted = null;
+
+    @LinkingObjects("mSavedUsers") // <-- !
+    private final RealmResults<ApplicationUser> ownersOfSaved = null;
+
+
+    public RealmResults<ApplicationUser> getOwnersOfAdded() {
+        return ownersOfAdded;
     }
 
-    public void setDeletedFromNavList(Boolean deletedFromNavList) {
-        mDeletedFromNavList = deletedFromNavList;
+    public RealmResults<ApplicationUser> getOwnersOfDeleted() {
+        return ownersOfDeleted;
     }
 
-    public Boolean getFoundForNavList() {
-        return mFoundForNavList;
-    }
-
-    public void setFoundForNavList(Boolean foundForNavList) {
-        mFoundForNavList = foundForNavList;
-    }
-
-    public String getUserLogin() {
-        return mUserLogin;
-    }
-
-    public void setUserLogin(String userLogin) {
-        mUserLogin = userLogin;
+    public RealmResults<ApplicationUser> getOwnersOfSaved() {
+        return ownersOfSaved;
     }
 
     public String getGitHubLogin() {

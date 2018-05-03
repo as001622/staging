@@ -9,106 +9,131 @@ import java.util.List;
 
 import io.realm.Case;
 import io.realm.Realm;
+import io.realm.RealmList;
 import io.realm.RealmResults;
 
 public class DatabaseInteractorImpl implements DatabaseInteractor{
     private Realm mRealm;
+    private String mLogin;
+
+    public static final String mUserLoginField="mUserLogin";
+    public static final String mAddedUserLoginField ="ownersOfAdded.mUserLogin";
+    public static final String mDeletedUserLoginField ="ownersOfDeleted.mUserLogin";
+    public static final String mUserGitHubLoginField ="mGitHubLogin";
+
+
     public DatabaseInteractorImpl(Realm realm) {
+
         mRealm=realm;
     }
 
-
-    public List<GitHubUser> getListForMainRecyclerView(String login){
-        List<GitHubUser> gitHubUserList = new ArrayList<>();
-        RealmResults<User> result = mRealm.where(User.class)
-                .equalTo("mUserLogin",login)
-                .and()
-                .equalTo("mFoundForNavList",false)
-                .and()
-                .equalTo("mDeletedFromNavList",false)
+    private void getAllData(String message){
+        RealmResults<ApplicationUser> result = mRealm.where(ApplicationUser.class)
                 .findAllAsync();
         result.load();
         if (result.size()!=0)
-            for (User user:result){
-                gitHubUserList.add(getGitHubUser(user));
-            }
+        for(ApplicationUser appUser:result)
+            Log.v(message,appUser.toString());
+    }
+
+    public List<GitHubUser> getListForMainRecyclerView(){
+        List<GitHubUser> gitHubUserList = new ArrayList<>();
+        ApplicationUser appUser = mRealm.where(ApplicationUser.class)
+                .equalTo(mUserLoginField,mLogin)
+                .findFirst();
+
+        if (appUser!=null)
+           for(User user:appUser.getAddedUsers())
+               gitHubUserList.add(getGitHubUser(user));
 
         return gitHubUserList;
     }
 
     public List<GitHubUser> getListForMainSearchView(String query){
+
         List<GitHubUser> gitHubUserList = new ArrayList<>();
-        RealmResults<User> result = mRealm.where(User.class)
-                .beginsWith("mGitHubLogin",query, Case.INSENSITIVE)
+        RealmResults<User> addedUsers = mRealm.where(User.class)
+                .equalTo(mAddedUserLoginField,mLogin)
                 .and()
-                .equalTo("mFoundForNavList",false)
-                .and()
-                .equalTo("mDeletedFromNavList",false)
+                .beginsWith(mUserGitHubLoginField,query, Case.INSENSITIVE)
                 .findAllAsync();
-        result.load();
-        if (result.size()!=0)
-            for (User user:result){
-                gitHubUserList.add(getGitHubUser(user));
+        addedUsers.load();
+        if (addedUsers.size()!=0) {
+                for (User user:addedUsers)
+                    gitHubUserList.add(getGitHubUser(user));
             }
         return gitHubUserList;
     }
-    public void clearNavData(String login){
-        RealmResults<User> result = mRealm.where(User.class)
-                .equalTo("mDeletedFromNavList",true)
-                .and()
-                .equalTo("mUserLogin",login)
-                .findAllAsync();
-        result.deleteAllFromRealm();
 
-    }
+    public List<GitHubUser> getListForNavRecyclerView(List<GitHubUser> gitHubUserList){
 
-    public List<GitHubUser> getListForNavRecyclerView(String login,List<GitHubUser> gitHubUserList){
         List<GitHubUser> deletedGitHubUserList = new ArrayList<>();
+        ApplicationUser appUser = mRealm
+                .where(ApplicationUser.class)
+                .equalTo(mUserLoginField,mLogin)
+                .findFirst();
+        if (appUser!=null)
+            appUser.load();
 
-        RealmResults<User> result = mRealm.where(User.class)
-                .equalTo("mUserLogin",login)
-                .and()
-                .equalTo("mDeletedFromNavList",true)
-                .findAllAsync();
-        result.load();
-
-        if (result.size()!=0)
-            for (User user:result){
+        if (appUser!=null)
+            for(User user:appUser.getDeletedUsers())
                 deletedGitHubUserList.add(getGitHubUser(user));
-            }
+        Log.v("deletedList",deletedGitHubUserList.toString());
         gitHubUserList.removeAll(deletedGitHubUserList);
-        Log.v("ZHZH first", result.toString());
+        Log.v("NavList",gitHubUserList.toString());
         return gitHubUserList;
     }
 
-    public void insertNewUser(GitHubUser gitHubUser, String login){
+    public void insertNewUser(GitHubUser gitHubUser){
+
+        RealmList<User> addedUserList;
+        ApplicationUser appUser=mRealm
+                .where(ApplicationUser.class)
+                .equalTo(mUserLoginField,mLogin)
+                .findFirst();
+        if (appUser==null) {
+            appUser=new ApplicationUser();
+            appUser.setUserLogin(mLogin);
+            addedUserList=new RealmList<User>();
+        }
+        else  addedUserList= appUser.getAddedUsers();
+        mRealm.beginTransaction();
+        addedUserList.add(setUser(gitHubUser));
+        appUser.setAddedUsers(addedUserList);
+        mRealm.insertOrUpdate(appUser);
+        mRealm.commitTransaction();
+        getAllData("insertNew");
+
+    }
+    public void insertNewDeletedUser(GitHubUser gitHubUser){
+
+        RealmList<User> deletedUserList;
+        ApplicationUser appUser=mRealm
+                .where(ApplicationUser.class)
+                .equalTo(mUserLoginField,mLogin)
+                .findFirst();
+        if (appUser==null) {
+            appUser=new ApplicationUser();
+            appUser.setUserLogin(mLogin);
+            deletedUserList=new RealmList<User>();
+        }
+        else  deletedUserList= appUser.getDeletedUsers();
 
         mRealm.beginTransaction();
+        deletedUserList.add(setUser(gitHubUser));
+        appUser.setDeletedUsers(deletedUserList);
+        mRealm.insertOrUpdate(appUser);
+        mRealm.commitTransaction();
+        getAllData("insertNewDeleted");
+    }
+
+    private User setUser(GitHubUser gitHubUser){
         User user = new User();
         user.setGitHubLogin(gitHubUser.getLogin());
         user.setGitHubReposUrl(gitHubUser.getReposUrl());
         user.setGitHubAvatarUrl(gitHubUser.getAvatarUrl());
         user.setGitHubId(gitHubUser.getId());
-        user.setFoundForNavList(false);
-        user.setDeletedFromNavList(false);
-        user.setUserLogin(login);
-        mRealm.insertOrUpdate(user);
-        mRealm.commitTransaction();
-
-    }
-    public void insertNewDeletedUser(GitHubUser gitHubUser, String login){
-
-        mRealm.beginTransaction();
-        User deletedUser = new User();;
-        deletedUser.setGitHubLogin(gitHubUser.getLogin());
-        deletedUser.setGitHubReposUrl(gitHubUser.getReposUrl());
-        deletedUser.setGitHubAvatarUrl(gitHubUser.getAvatarUrl());
-        deletedUser.setGitHubId(gitHubUser.getId());
-        deletedUser.setDeletedFromNavList(true);
-        deletedUser.setFoundForNavList(false);
-        deletedUser.setUserLogin(login);
-        mRealm.insertOrUpdate(deletedUser);
-        mRealm.commitTransaction();
+        return user;
     }
 
     public void deleteUser(final GitHubUser gitHubUser)
@@ -117,12 +142,16 @@ public class DatabaseInteractorImpl implements DatabaseInteractor{
         mRealm.executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
-                        Log.v("ZHZH delete", gitHubUser.toString());
-                        mRealm.where(User.class)
-                        .equalTo("mGitHubLogin",gitHubUser.getLogin())
-                        .findFirst().deleteFromRealm();
+                mRealm
+                        .where(User.class)
+                        .equalTo(mAddedUserLoginField,mLogin)
+                        .and()
+                        .equalTo(mUserGitHubLoginField,gitHubUser.getLogin())
+                        .findFirst()
+                        .deleteFromRealm();
             }
         });
+        getAllData("deleteUser");
     }
 
     private GitHubUser getGitHubUser(User user){
@@ -132,5 +161,58 @@ public class DatabaseInteractorImpl implements DatabaseInteractor{
         gitHubUser.setLogin(user.getGitHubLogin());
         gitHubUser.setReposUrl(user.getGitHubReposUrl());
             return gitHubUser;
+    }
+
+    public void saveData(List<GitHubUser> savedGitHubUsersList){
+        if (savedGitHubUsersList!=null) {
+            RealmList<User> savedUserList;
+            ApplicationUser appUser = mRealm
+                    .where(ApplicationUser.class)
+                    .equalTo(mUserLoginField, mLogin)
+                    .findFirst();
+            if (appUser == null) {
+                appUser = new ApplicationUser();
+                appUser.setUserLogin(mLogin);
+                savedUserList = new RealmList<>();
+            } else savedUserList = appUser.getSavedUsers();
+            //clearing previous data
+            if (savedUserList != null) {
+                mRealm.beginTransaction();
+                savedUserList.clear();
+                mRealm.commitTransaction();
+            }
+
+            //inserting new data
+            mRealm.beginTransaction();
+            for (GitHubUser gitHubUser : savedGitHubUsersList) {
+                savedUserList.add(setUser(gitHubUser));
+            }
+            appUser.setSavedUsers(savedUserList);
+            mRealm.insertOrUpdate(appUser);
+            mRealm.commitTransaction();
+            Log.v("SaveData",appUser.toString());
+        }
+
+    }
+
+    public List<GitHubUser> restoreData(){
+        List<GitHubUser> gitHubUserList = new ArrayList<>();
+        ApplicationUser appUser = mRealm.where(ApplicationUser.class)
+                .equalTo(mUserLoginField,mLogin)
+                .findFirst();
+        Log.v("RestoreData",appUser.toString());
+        if (appUser!=null)
+            for(User user:appUser.getSavedUsers())
+                gitHubUserList.add(getGitHubUser(user));
+        Log.v("RestoreData",gitHubUserList.toString());
+        return gitHubUserList;
+    }
+
+    public String getLogin() {
+        return mLogin;
+    }
+
+    public void setLogin(String login) {
+        mLogin = login;
     }
 }

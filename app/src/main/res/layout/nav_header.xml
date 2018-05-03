@@ -3,7 +3,7 @@
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
-        android:layout_height="750dp"
+        android:layout_height="500dp"
         android:background="?attr/colorPrimaryDark"
         android:gravity="top"
         android:orientation="vertical"
@@ -23,7 +23,7 @@
             android:layout_width="100dp"
             android:layout_height="100dp"
             android:layout_gravity="top"
-            android:src="@drawable/user" />
+            android:src="@drawable/githublogo"/>
 
         <android.support.v7.widget.SearchView
             android:id="@+id/nav_search"
@@ -32,6 +32,15 @@
             android:layout_gravity="top"
             android:imeOptions="flagNoExtractUi"
             app:queryHint="@string/nav_search_hint" />
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/nav_recyclerview"
+            android:layout_width="match_parent"
+            android:layout_height="300dp"
+            android:background="?attr/colorPrimaryDark"
+            android:visibility="gone"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior">
+        </android.support.v7.widget.RecyclerView>
 
 
 </LinearLayout>
