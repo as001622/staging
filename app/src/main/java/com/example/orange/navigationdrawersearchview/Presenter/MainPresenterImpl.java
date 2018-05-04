@@ -1,17 +1,13 @@
 package com.example.orange.navigationdrawersearchview.Presenter;
 
-import android.util.Log;
-
+import com.example.orange.navigationdrawersearchview.Database.DatabaseInteractor;
 import com.example.orange.navigationdrawersearchview.Database.DatabaseInteractorImpl;
-import com.example.orange.navigationdrawersearchview.DetailsActivity.DetailsView;
 import com.example.orange.navigationdrawersearchview.GitHubApi.ApiInteractorImpl;
 import com.example.orange.navigationdrawersearchview.GitHubApi.ApiInteractor;
 import com.example.orange.navigationdrawersearchview.MainView;
 import com.example.orange.navigationdrawersearchview.Model.GitHubUser;
 import com.example.orange.navigationdrawersearchview.NavRecyclerView.RecyclerViewListener;
 import com.example.orange.navigationdrawersearchview.NavRecyclerView.BaseAdapter;
-
-import org.json.JSONException;
 
 import java.util.List;
 
@@ -23,24 +19,52 @@ public class MainPresenterImpl implements Presenter,
         RecyclerViewListener {
 
     private MainView mMainView;
-    private ApiInteractorImpl mApiInteractorImpl;
-    private DatabaseInteractorImpl mDatabaseInteractorImpl;
+    private ApiInteractor mApiInteractor;
+    private DatabaseInteractor mDatabaseInteractor;
     private BaseAdapter mBaseAdapter;
     private BaseAdapter mMainAdapter;
     private List<GitHubUser> mNavUserList;
     private List<GitHubUser> mMainUserList;
-    private String mGitHubLoginToDoSomeInDatabase;
-    private String mLoginForLoginnedUser;
-    private String mPasswordForLoginnedUser;
+    private String mGitHubLoginForDatabase;
+    private String mLoginForApplication;
     private Realm mRealm;
-    private boolean loading=false;
+    private boolean mLoading =false;
     private String mNavSearchQuery;
+    private String mMainSearchViewText;
 
 
     public MainPresenterImpl(MainView mainView, Realm realm) {
-        mDatabaseInteractorImpl=new DatabaseInteractorImpl(realm);
+        mDatabaseInteractor=new DatabaseInteractorImpl(realm);
+       // mDatabaseInteractor.clearSavedData();
         mMainView = mainView;
         mRealm=realm;
+    }
+
+    public void activityStarted(String login, String avatarArl) {
+        if (login == GUEST_LOGIN) {
+            if (mLoginForApplication==null)
+                mLoginForApplication=GUEST_LOGIN;
+            else if (mLoginForApplication!=GUEST_LOGIN) {
+                mMainView.newUserLoggedIn();
+                mLoginForApplication=GUEST_LOGIN;
+            }
+            mDatabaseInteractor.setLogin(mLoginForApplication);
+            mMainView.setUserAsGuest();
+            setMainAdapter();
+            mApiInteractor = new ApiInteractorImpl();
+        }
+        else{
+            if (mLoginForApplication==null)
+                mLoginForApplication=login;
+            else if (mLoginForApplication!=login) {
+                mMainView.newUserLoggedIn();
+                mLoginForApplication=login;
+            }
+            mDatabaseInteractor.setLogin(mLoginForApplication);
+            mApiInteractor = new ApiInteractorImpl();
+            mMainView.setUser(login, avatarArl);
+            setMainAdapter();
+        }
     }
 
     public void navSearchViewDataChanged(String navSearchQuery) {
@@ -51,8 +75,8 @@ public class MainPresenterImpl implements Presenter,
         }
         else if (navSearchQuery.length()>minimumNavTextSearchSize) {
             ApiInteractorImpl.mCurrentPage=firstPage;
-            Log.v("currentpage"," "+(String.valueOf(ApiInteractorImpl.mCurrentPage)));
-            mApiInteractorImpl.firstTimeLoadData(mNavSearchQuery, this);
+            mNavSearchQuery=navSearchQuery;
+            mApiInteractor.firstTimeLoadData(mNavSearchQuery, this);
         }
         else {
             mMainView.setNavRecyclerViewAdapter(null);
@@ -60,43 +84,48 @@ public class MainPresenterImpl implements Presenter,
     }
 
     public void needMoreData(){
-        if (!loading) {
-            loading=true;
-            Log.v("currentpage", " " + (String.valueOf(ApiInteractorImpl.mCurrentPage)));
-            mApiInteractorImpl.loadMoreData(mNavSearchQuery, this);
+        if (!mLoading) {
+            mLoading =true;
+            mApiInteractor.loadMoreData(mNavSearchQuery, this);
         }
     }
 
+    public void setNavSearchQuery(String navSearchQuery) {
+        mNavSearchQuery = navSearchQuery;
+    }
+
     public void mainSearchViewDataChanged(String mainSearchQuery) {
-        if (mainSearchQuery.length()>minimumMainTextSearchSize) {
-            mMainUserList=mDatabaseInteractorImpl.getListForMainSearchView(mainSearchQuery);
-            mMainAdapter = new BaseAdapter(mMainUserList, this,MAIN_RECYCLERVIEW_TAG);
-            mMainView.setMainRecyclerViewAdapter(mMainAdapter);
+        setMainSearchViewText(mainSearchQuery);;
+        if (mMainSearchViewText.length()>minimumMainTextSearchSize) {
+            setMainAdapterWithSearchQuery();
         }
-        else setMainAdapter(mLoginForLoginnedUser);
+        else setMainAdapter();
     }
 
     @Override
     public void OnLoadDataResponseIsSuccesfull(List<GitHubUser> userList,Integer total_count,String TAG) {
         if ((mNavUserList==null)|(TAG==LOAD_DATA_FIRST_TIME_TAG)) {
             mNavUserList=userList;
-
         }
         else {
             if (TAG==LOAD_MORE_DATA_TAG) {
-
                 mNavUserList.addAll(userList);
             }
         }
         ApiInteractorImpl.mCurrentPage++;
+
         setNavAdapter();
     }
 
     @Override
     public void OnLoadDataResponseIsNotSuccesfull(String message) {
-        loading=false;
+        mLoading =false;
         mMainView.showToast(RESPONSE_UNSUCCESFULL + message);
 
+    }
+
+    public void setLoginForApplication(String login){
+        mLoginForApplication=login;
     }
 
     @Override
@@ -106,9 +135,10 @@ public class MainPresenterImpl implements Presenter,
 
     public void navLogoutPressed(){
         mMainView.setUserAsGuest();
-        mLoginForLoginnedUser =GUEST_LOGIN;
-        mDatabaseInteractorImpl.setLogin(mLoginForLoginnedUser);
-        setMainAdapter(GUEST_LOGIN);
+        mMainView.newUserLoggedIn();
+        mLoginForApplication =GUEST_LOGIN;
+        mDatabaseInteractor.setLogin(mLoginForApplication);
+        setMainAdapter();
 
     }
 
@@ -116,85 +146,73 @@ public class MainPresenterImpl implements Presenter,
         mMainView.createLoginDialog();
     }
 
-    public void saveData(String login){
+    public void saveData(){
 
-        Log.v("dadd",mLoginForLoginnedUser);
-        mDatabaseInteractorImpl.setLogin(mLoginForLoginnedUser);
-        mDatabaseInteractorImpl.saveData(mNavUserList);
+        mDatabaseInteractor.setLogin(mLoginForApplication);
+        mDatabaseInteractor.saveData(mNavUserList);
     }
 
-    public void restoreData(String login){
-        mDatabaseInteractorImpl.setLogin(mLoginForLoginnedUser);
-        mNavUserList=mDatabaseInteractorImpl.restoreData();
+    public void restoreData(){
+        mDatabaseInteractor.setLogin(mLoginForApplication);
+        mNavUserList=mDatabaseInteractor.restoreData();
         setNavAdapter();
+        mDatabaseInteractor.clearSavedData();
     }
 
-    public void activityStarted(String login,String password, String avatarArl) {
-        if (login == null) {
-            mLoginForLoginnedUser =GUEST_LOGIN;
-            mDatabaseInteractorImpl.setLogin(mLoginForLoginnedUser);
-            mMainView.setUserAsGuest();
-            mMainView.setNavRecyclerViewAdapter(null);
-            setMainAdapter(mLoginForLoginnedUser);
-            mApiInteractorImpl = new ApiInteractorImpl(null,null);
-        }
-        else{
-            mLoginForLoginnedUser =login;
-            mDatabaseInteractorImpl.setLogin(mLoginForLoginnedUser);
-            mPasswordForLoginnedUser=password;
-            mApiInteractorImpl = new ApiInteractorImpl(mLoginForLoginnedUser,mPasswordForLoginnedUser);
-            mMainView.setUser(login, avatarArl);
-            setMainAdapter(mLoginForLoginnedUser);
-        }
+    private void setMainAdapter(){
+        mMainUserList=mDatabaseInteractor.getListForMainRecyclerView();
+        mMainAdapter = new BaseAdapter(mMainUserList, this,MAIN_RECYCLERVIEW_TAG);
+        mMainView.setMainRecyclerViewAdapter(mMainAdapter);
     }
 
-    private void setMainAdapter(String mainLogin){
-        mMainUserList=mDatabaseInteractorImpl.getListForMainRecyclerView();
+    private void setMainAdapterWithSearchQuery(){
+        mMainUserList=mDatabaseInteractor.getListForMainSearchView(mMainSearchViewText);
         mMainAdapter = new BaseAdapter(mMainUserList, this,MAIN_RECYCLERVIEW_TAG);
         mMainView.setMainRecyclerViewAdapter(mMainAdapter);
     }
 
     private void setNavAdapter(){
-        mNavUserList=mDatabaseInteractorImpl.getListForNavRecyclerView(mNavUserList);
+        mNavUserList=mDatabaseInteractor.getListForNavRecyclerView(mNavUserList);
         mBaseAdapter = new BaseAdapter(mNavUserList, this,NAV_RECYCLERVIEW_TAG);
         mMainView.setNavRecyclerViewAdapter(mBaseAdapter);
-        loading=false;
+        mLoading =false;
     }
 
     @Override
     public void onNavAddButtonClick(String userToAddLogin) {
-        mGitHubLoginToDoSomeInDatabase =userToAddLogin;
-        //mMainView.showToast("Adding");
+        mGitHubLoginForDatabase =userToAddLogin;
         mMainView.showAlertDialog(addDialogTitle,addNewDataToDatabase,NAV_ADD_DIALOG_TAG);
     }
 
     @Override
     public void onNavDeleteButtonClick(String userToDeleteLogin) {
-        mGitHubLoginToDoSomeInDatabase =userToDeleteLogin;
+        mGitHubLoginForDatabase =userToDeleteLogin;
         mMainView.showAlertDialog(deleteDialogTitle,deleteDataFromTheList,NAV_DELETE_DIALOG_TAG);
     }
 
     @Override
     public void onMainDeleteButtonClick(String userToDeleteLogin) {
-        mGitHubLoginToDoSomeInDatabase =userToDeleteLogin;
+        mGitHubLoginForDatabase =userToDeleteLogin;
         mMainView.showAlertDialog(deleteDialogTitle,mainDialogMessage,MAIN_RECYCLERVIEW_TAG);
     }
 
     public void confirmationClicked(String tag){
         if (tag==NAV_ADD_DIALOG_TAG){
-            GitHubUser gitHubUser= getUser(mGitHubLoginToDoSomeInDatabase);
-            mMainView.showToast(ADDING_USER_TEXT+ mGitHubLoginToDoSomeInDatabase);
-            mDatabaseInteractorImpl.insertNewUser(gitHubUser);
-            setMainAdapter(mLoginForLoginnedUser);
+            GitHubUser gitHubUser= getUser(mGitHubLoginForDatabase);
+            mMainView.showToast(ADDING_USER_TEXT+ mGitHubLoginForDatabase);
+            mDatabaseInteractor.insertNewUser(gitHubUser);
+            if (mMainSearchViewText==null)
+                setMainAdapter();
+            else setMainAdapterWithSearchQuery();
         }
         else if (tag==NAV_DELETE_DIALOG_TAG){
-            GitHubUser gitHubUser= getUser(mGitHubLoginToDoSomeInDatabase);
-            if (!mDatabaseInteractorImpl.getListForMainRecyclerView().contains(gitHubUser))
+            GitHubUser gitHubUser= getUser(mGitHubLoginForDatabase);
+            if (!mDatabaseInteractor.getListForMainRecyclerView().contains(gitHubUser))
             {
-                mDatabaseInteractorImpl.insertNewDeletedUser(gitHubUser);
+                mDatabaseInteractor.insertNewDeletedUser(gitHubUser);
                 setNavAdapter();
-                setMainAdapter(mLoginForLoginnedUser);
-                mMainView.showToast(DELETING_USER_TEXT + mGitHubLoginToDoSomeInDatabase);
+                setMainAdapter();
+                mMainView.showToast(DELETING_USER_TEXT + mGitHubLoginForDatabase);
             }
             else{
                 mMainView.showAlertDialog(collisionDialogTitle, collsionDialogMessage, COLLISION_DIALOG_TAG);
@@ -202,18 +220,18 @@ public class MainPresenterImpl implements Presenter,
         }
         else if (tag==COLLISION_DIALOG_TAG)
         {
-            GitHubUser gitHubUser= getUser(mGitHubLoginToDoSomeInDatabase);
-            mDatabaseInteractorImpl.deleteUser(gitHubUser);
-            mDatabaseInteractorImpl.insertNewDeletedUser(gitHubUser);
+            GitHubUser gitHubUser= getUser(mGitHubLoginForDatabase);
+            mDatabaseInteractor.deleteUser(gitHubUser);
+            mDatabaseInteractor.insertNewDeletedUser(gitHubUser);
             setNavAdapter();
-            setMainAdapter(mLoginForLoginnedUser);
+            setMainAdapter();
         }
         else if (tag==MAIN_RECYCLERVIEW_TAG)
         {
-            GitHubUser gitHubUser= getUser(mGitHubLoginToDoSomeInDatabase);
-            mDatabaseInteractorImpl.deleteUser(gitHubUser);
-            setMainAdapter(mLoginForLoginnedUser);
-            mMainView.showToast(mainDialogMessage+" "+ mGitHubLoginToDoSomeInDatabase);
+            GitHubUser gitHubUser= getUser(mGitHubLoginForDatabase);
+            mDatabaseInteractor.deleteUser(gitHubUser);
+            setMainAdapter();
+            mMainView.showToast(mainDialogMessage+" "+ mGitHubLoginForDatabase);
         }
     }
 
@@ -234,6 +252,10 @@ public class MainPresenterImpl implements Presenter,
             }
         }
         return null;
+    }
+
+    public void setMainSearchViewText(String mainSearchViewText) {
+        mMainSearchViewText = mainSearchViewText;
     }
 
     @Override

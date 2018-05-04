@@ -98,9 +98,9 @@ public class LoginDialogFragment extends DialogFragment implements LoginDialogVi
 
     }
 
-    public void loginDialogClose(String login, String password, String avatarUrl){
+    public void loginDialogClose(String login,String avatarUrl){
         MainView.LoginDialogClosed listener = (MainView.LoginDialogClosed) getActivity();
-        listener.onLoginDialogClosed(login, password, avatarUrl);
+        listener.onLoginDialogClosed(login,avatarUrl);
         dismiss();
     }
 

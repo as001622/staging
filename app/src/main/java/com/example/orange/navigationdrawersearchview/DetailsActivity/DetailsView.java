@@ -8,5 +8,7 @@ public interface DetailsView {
     public void setDetailsAvatarImage(String avatarUrl);
     public void setDetailsUserLogin(String login);
     public void setDetailsFollowers(String folowersCount);
+    public void showDetailsLayout();
+    public void showBackButton();
     void showToast(String message);
 }

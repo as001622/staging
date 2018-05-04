@@ -14,7 +14,7 @@ public class LoginDialogPresenterImpl implements LoginDialogPresenter, Constants
 
     public LoginDialogPresenterImpl(LoginDialogView dialogView){
         mDialogView=dialogView;
-        mApiInteractorImpl = new ApiInteractorImpl(null,null);
+        mApiInteractorImpl = new ApiInteractorImpl();
     }
 
     public void loginPositiveButtonClicked(String username,String password){
@@ -33,7 +33,7 @@ public class LoginDialogPresenterImpl implements LoginDialogPresenter, Constants
 
     @Override
     public void loginNegativeButtonClicked() {
-        mDialogView.loginDialogClose(null,null, null);
+        mDialogView.loginDialogClose(GUEST_LOGIN, null);
 
     }
 
@@ -41,7 +41,7 @@ public class LoginDialogPresenterImpl implements LoginDialogPresenter, Constants
     public void OnLoginResponseIsSuccesfull(GitHubUser gitHubUser,String password) {
         mDialogView.showToast(DIALOG_LOGIN_SUCCESFULL);
         mDialogView.setResponseSent(false);
-        mDialogView.loginDialogClose(gitHubUser.getLogin(),password,gitHubUser.getAvatarUrl());
+        mDialogView.loginDialogClose(gitHubUser.getLogin(),gitHubUser.getAvatarUrl());
     }
 
     @Override

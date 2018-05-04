@@ -16,14 +16,14 @@ public class ApiBuilder implements Constants {
 
     private Retrofit retrofit;
 
-    public ApiBuilder(final String login,final String password) {
-        if ((login==null)|(password==null)) {
+    public ApiBuilder() {
             retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
+                .client(new OkHttpClient())
                 .build();
         }
-        else{
+        /*else{
             OkHttpClient okHttpClient = new OkHttpClient().newBuilder().addInterceptor(new Interceptor() {
                 @Override
                 public okhttp3.Response intercept(Interceptor.Chain chain) throws IOException {
@@ -42,7 +42,7 @@ public class ApiBuilder implements Constants {
                     .addConverterFactory(GsonConverterFactory.create())
                     .build();
         }
-    }
+    }*/
 
     public ApiService getService() {
         return retrofit.create(ApiService.class);

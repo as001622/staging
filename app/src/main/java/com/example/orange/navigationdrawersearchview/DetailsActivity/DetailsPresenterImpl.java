@@ -13,12 +13,7 @@ public class DetailsPresenterImpl implements ApiInteractor.OnUserDetailsRecieved
     public DetailsPresenterImpl(DetailsView detailsView, String gitHubUserLogin){
         mDetailsView=detailsView;
         mGitHubUserLogin=gitHubUserLogin;
-        mDetailsView.showToast("Details loading! please wait!");
-        activityCreated();
-    }
-
-    private void activityCreated(){
-        mApiInteractorImpl=new ApiInteractorImpl(null,null);
+        mApiInteractorImpl=new ApiInteractorImpl();
         mApiInteractorImpl.getUserDetails(mGitHubUserLogin, this);
     }
 
@@ -30,16 +25,19 @@ public class DetailsPresenterImpl implements ApiInteractor.OnUserDetailsRecieved
         mDetailsView.setDetailsCompany(gitHubUser.getCompany());
         mDetailsView.setDetailsAvatarImage(gitHubUser.getAvatarUrl());
         mDetailsView.setDetailsFollowers(gitHubUser.getFollowers());
+        mDetailsView.showDetailsLayout();
     }
 
     @Override
     public void OnUserDetailsRecievedIsNotSuccesfull(String message) {
         mDetailsView.showToast(message);
+        mDetailsView.showBackButton();
 
     }
 
     @Override
     public void OnUserDetailsRecievedFailure(String message) {
         mDetailsView.showToast(message);
+        mDetailsView.showBackButton();
     }
 }

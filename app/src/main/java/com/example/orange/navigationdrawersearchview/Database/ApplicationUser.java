@@ -11,7 +11,6 @@ public class ApplicationUser extends RealmObject{
     private RealmList<User> mAddedUsers;
     private RealmList<User> mDeletedUsers;
     private RealmList<User> mSavedUsers;
-    boolean fff;
 
     public String getUserLogin() {
         return mUserLogin;

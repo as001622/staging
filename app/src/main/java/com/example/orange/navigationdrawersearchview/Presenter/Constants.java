@@ -1,5 +1,7 @@
 package com.example.orange.navigationdrawersearchview.Presenter;
 
+import com.example.orange.navigationdrawersearchview.R;
+
 public interface Constants {
 
     public static final String QUERY_HINT="Search new Users!!!!!";
@@ -19,9 +21,12 @@ public interface Constants {
     public static final String deleteDialogTitle="Deleting";
     public static final String NAV_ADD_DIALOG_TAG="NAV_ADD_DIALOG_TAG";
     public static final String NAV_DELETE_DIALOG_TAG="NAV_DELETE_DIALOG_TAG";
-    public static final String mainDialogMessage="Do you want to delete this Github user from this list?";
+    public static final String LOGGED_TAG="LOGGED_TAG";
+    public static final String mainDialogMessage="You've deleted ";
     public static final String MAIN_DELETE_DIALOG_TAG="MAIN_DELETE_DIALOG_TAG";
     public static final String COLLISION_DIALOG_TAG="COLLISION DIALOG TAG";
+    public static final String MAIN_RECYCLERVIEW_STATE_TAG="MAIN_RECYCLERVIEW_STATE_TAG";
+    public static final String NAV_RECYCLERVIEW_STATE_TAG="NAV_RECYCLERVIEW_STATE_TAG";
     public static final String NAV_RECYCLERVIEW_TAG="NAV_RECYCLERVIEW_TAG";
     public static final String MAIN_RECYCLERVIEW_TAG="MAIN_RECYCLERVIEW_TAG";
     public static final String USER_LOGIN="USER LOGIN";
@@ -55,9 +60,22 @@ public interface Constants {
     public static final String HEADER_STATUS_FIELD="Status";
     public static final String STATUS_FIELD_CONTAINS_403ERROR="403";
     public static final String ON403_MESSAGE="Forbidden! Rate limit exceeded!!!";
-    public static final Integer loadPerPage=20;
+    public static final Integer loadPerPage=15;
     public static final Integer firstPage=1;
     public static final String LOAD_MORE_DATA_TAG="LOAD_MORE_DATA_TAG";
     public static final String LOAD_DATA_FIRST_TIME_TAG="LOAD_DATA_FIRST_TIME_TAG";
+
+    //DetailsActivity
+    public static final String DETAILS_AVATAR_IMAGE_TAG="DETAILS_AVATAR_IMAGE_TAG";
+    public static final String DETAILS_USER_LOGIN_TAG="DETAILS_USER_LOGIN_TAG";
+    public static final String DETAILS_EMAIL_TAG="DETAILS_EMAIL_TAG";
+    public static final String DETAILS_USERNAME_TAG="DETAIILS_USERNAME_TAG";
+    public static final String DETAILS_BLOG_TAG="DETAILS_BLOG_TAG";
+    public static final String DETAILS_COMPANY_TAG="DETAILS_COMPANY_TAG";
+    public static final String DETAILS_FOLLOWERS_TAG="DETAILS_FOLLOWERS_TAG";
+    public static final String DETAILS_LOADED_TAG="DETAILS_LOADED_TAG";
+    public static final String UNSSETLED_MESSAGE="not specified";
+
+
 
 }

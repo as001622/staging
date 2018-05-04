@@ -17,6 +17,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -31,6 +32,7 @@ import com.example.orange.navigationdrawersearchview.Login.LoginDialogFragment;
 import com.example.orange.navigationdrawersearchview.NavRecyclerView.BaseAdapter;
 import com.example.orange.navigationdrawersearchview.Presenter.Constants;
 import com.example.orange.navigationdrawersearchview.Presenter.MainPresenterImpl;
+import com.example.orange.navigationdrawersearchview.Presenter.Presenter;
 import com.squareup.picasso.Picasso;
 
 import io.realm.Realm;
@@ -44,19 +46,18 @@ public class MainActivity extends AppCompatActivity implements Constants,
 
 
     private DrawerLayout mDrawerLayout;
-    private MainPresenterImpl mMainPresenterImpl;
+    private Presenter mMainPresenter;
     private RecyclerView mNavRecyclerView;
     private NavigationView mNavigationView;
     private SearchView mNavSearchView;
     private LoginDialogFragment mLoginDialogFragment;
     private ImageView mNavigationViewImageView;
     private TextView mNavigationViewTextView;
+    private boolean mLogged=false;
     private String mLogin;
-    private String mPassword;
     private String mAvatarUrl;
     private String mNavSearchText;
     private String mMainSearchText;
-    private int mNavRecyclerViewScrollPosition;
     private SearchView mMainSearchView;
     private Toolbar mToolbar;
     private ActionBar mActionbar;
@@ -72,7 +73,6 @@ public class MainActivity extends AppCompatActivity implements Constants,
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mNavRecyclerViewScrollPosition=0;
         mDrawerLayout = findViewById(R.id.drawer_layout);
         mHandler = new Handler();
         
@@ -91,67 +91,98 @@ public class MainActivity extends AppCompatActivity implements Constants,
         mActionbar = getSupportActionBar();
         mActionbar.setDisplayHomeAsUpEnabled(true);
         mActionbar.setHomeAsUpIndicator(R.drawable.ic_menu_black_24dp);
-        mMainPresenterImpl = new MainPresenterImpl(this, realm);
+        mMainPresenter = new MainPresenterImpl(this, realm);
 
         if (savedInstanceState==null) {
             createLoginDialog();
         }
         else{
             if (getSupportFragmentManager().findFragmentByTag(getText(R.string.dialog_tag).toString())==null)
-                onLoginDialogClosed(mLogin,mPassword, mAvatarUrl);
+                onLoginDialogClosed(mLogin, mAvatarUrl);
         }
 
     }
 
-    public void setMainSearchView() {
-        mMainSearchView.setImeOptions(EditorInfo.IME_FLAG_NO_EXTRACT_UI);
-        mMainSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                hideKeyboard();
-                return false;
+
+    private void  setMainSearchViewText(String text){
+        if (text != null)
+            if (!text.isEmpty()) {
+                mMainSearchView.setQuery(mMainSearchText, false);
+                mMainSearchView.setIconified(false);
+                mMainPresenter.mainSearchViewDataChanged(mMainSearchText);
+                if (mDrawerLayout.isDrawerOpen(mNavigationView))
+                    mMainSearchView.clearFocus();
+                Log.v("newUserLoggedIn","maintextisalive");
             }
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                mMainSearchText=newText;
-                mMainPresenterImpl.mainSearchViewDataChanged(newText);
-                return false;
-            }
-        });
+        if(text==null){
+            mMainSearchView.setQuery("", false);
+            mMainSearchView.setIconified(true);
+            mMainSearchView.clearFocus();
+            Log.v("newUserLoggedIn","maintextempty");
+        }
     }
+
+    public void setMainSearchView() {
+       if (mMainSearchView!=null) {
+           Log.v("newUserLoggedIn","mainsearchviewsetting");
+           hideKeyboard();
+           mMainSearchView.setImeOptions(EditorInfo.IME_FLAG_NO_EXTRACT_UI);
+           setMainSearchViewText(mMainSearchText);
+           mMainSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+               @Override
+               public boolean onQueryTextSubmit(String query) {
+                   hideKeyboard();
+                   return false;
+               }
+
+               @Override
+               public boolean onQueryTextChange(String newText) {
+                   mMainSearchText = newText;
+                   mMainPresenter.mainSearchViewDataChanged(newText);
+                   return false;
+               }
+           });
+       }
+    }
+
+    public void setNavSearchViewText(String text){
+        if (text!=null)
+            if(!text.isEmpty()) {
+                mNavSearchView.setQuery(text, false);
+                mNavSearchView.setIconified(false);
+                mNavSearchView.clearFocus();
+                Log.v("newUserLoggedIn","navtextalive "+mNavSearchText);
+            }
+         if(text==null){
+                Log.v("newUserLoggedIn","navtextempty");
+                mNavSearchView.setQuery("",false);
+                mNavSearchView.setIconified(true);
+                mNavSearchView.clearFocus();
+            }
+    }
+
 
     public void setNavSearchView() {
         if (mNavSearchView==null){
             SearchView searchView = mNavigationView.getHeaderView(headerStartIndex).findViewById(R.id.nav_search);
             if (searchView != null) {
                 mNavSearchView = searchView;
-                if (mNavSearchText!=null)
-                    if(!mNavSearchText.isEmpty()) {
-                        mNavSearchView.setQuery(mNavSearchText, false);
-                        mNavSearchView.setIconified(false);
-                        mNavSearchView.clearFocus();
-                        mMainPresenterImpl.restoreData(mLogin);
-                    }
-                    else{
-                        mNavSearchView.setQuery(null,true);
-                        mNavSearchView.setIconified(true);
-                        mNavSearchView.clearFocus();
-                    }
                 mNavSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
                     @Override
                     public boolean onQueryTextSubmit(String query) {
                         hideKeyboard();
-                        mMainPresenterImpl.navSearchViewDataChanged(query);
+                        mNavSearchText=query;
+                        mMainPresenter.navSearchViewDataChanged(mNavSearchText);
                         return false;
                     }
                     @Override
                     public boolean onQueryTextChange(String newText) {
                         mNavSearchText = newText;
-                        mNavRecyclerViewScrollPosition=0;
+                        mNavRecyclerView=null;
                         mHandler.postDelayed(new Runnable() {
                             @Override
                             public void run() {
-                                mMainPresenterImpl.navSearchViewDataChanged(mNavSearchText);
+                                mMainPresenter.navSearchViewDataChanged(mNavSearchText);
                             }
                         },searchDelay);
                         return false;
@@ -159,6 +190,8 @@ public class MainActivity extends AppCompatActivity implements Constants,
                 });
             }
         }
+        if (mNavSearchText!=null)
+        setNavSearchViewText(mNavSearchText);
     }
 
     public void hideKeyboard(){
@@ -182,7 +215,6 @@ public class MainActivity extends AppCompatActivity implements Constants,
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        showToast("nav click");
         switch (item.getItemId()) {
             case android.R.id.home:
                 mDrawerLayout.openDrawer(GravityCompat.START);
@@ -196,16 +228,7 @@ public class MainActivity extends AppCompatActivity implements Constants,
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.toolbar_menu, menu);
         MenuItem searchItem = menu.findItem(R.id.toolbar_search);
-        mMainSearchView =
-                (SearchView) searchItem.getActionView();
-        //need this to hide keyboard on roatation and clear focus on this SearchView
-        if (mMainSearchText!=null)
-            if(!mMainSearchText.isEmpty()){
-                mMainSearchView.setQuery(mMainSearchText, false);
-                mMainSearchView.setIconified(false);
-            if (mDrawerLayout.isDrawerOpen(mNavigationView))
-                mMainSearchView.clearFocus();
-        }
+        mMainSearchView = (SearchView) searchItem.getActionView();
         setMainSearchView();
         return super.onCreateOptionsMenu(menu);
     }
@@ -217,10 +240,10 @@ public class MainActivity extends AppCompatActivity implements Constants,
 
         switch (item.getItemId()){
             case R.id.nav_logout:
-                mMainPresenterImpl.navLogoutPressed();
+                mMainPresenter.navLogoutPressed();
                 return true;
             case R.id.nav_login:
-                mMainPresenterImpl.navLoginPressed();
+                mMainPresenter.navLoginPressed();
                 return true;
         }
         return true;
@@ -232,65 +255,79 @@ public class MainActivity extends AppCompatActivity implements Constants,
         outState.putString(AVATAR_TAG,mAvatarUrl);
         outState.putString(NAVIGATION_SEARCH_TAG, mNavSearchText);
         outState.putString(MAIN_SEARCH_TAG,mMainSearchText);
-        outState.putString(PASSWORD_TAG,mPassword);
-
-        //saving navRecyclerViewScrollPosition
-        int scrollPositionIng;
-        if (mNavRecyclerView!=null) {
-            LinearLayoutManager linearLayoutManager = (LinearLayoutManager)mNavRecyclerView.getLayoutManager();
-            if (linearLayoutManager!=null) {
-                scrollPositionIng = linearLayoutManager.findFirstVisibleItemPosition();
-                mNavRecyclerViewScrollPosition = scrollPositionIng;
-                mMainPresenterImpl.saveData(mLogin);
-            }
-            outState.putInt(NAVIGATION_RECYCLERVIEW_POSITION, mNavRecyclerViewScrollPosition);
+        outState.putBoolean(LOGGED_TAG,mLogged);
+        if (mMainRecyclerView!=null) {
+            LinearLayoutManager mainLinearLayout=(LinearLayoutManager) mMainRecyclerView.getLayoutManager();
+            mMainRecyclerViewState=mainLinearLayout.onSaveInstanceState();
+            outState.putParcelable(MAIN_RECYCLERVIEW_STATE_TAG,mMainRecyclerViewState);
         }
+        if (mNavRecyclerView!=null) {
+            LinearLayoutManager navLinearLayout=(LinearLayoutManager) mNavRecyclerView.getLayoutManager();
+            mNavRecyclerViewState=navLinearLayout.onSaveInstanceState();
+            outState.putParcelable(NAVIGATION_RECYCLERVIEW_POSITION,mNavRecyclerViewState);
+        }
+        if (mNavSearchText!=null)
+            if(mNavSearchText.length()>minimumNavTextSearchSize)
+                mMainPresenter.saveData();
+       // outState.putInt(NAVIGATION_RECYCLERVIEW_POSITION, mNavRecyclerViewScrollPosition);
+
         super.onSaveInstanceState(outState);
     }
 
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
-        mPassword=savedInstanceState.getString(mPassword);
         mLogin=savedInstanceState.getString(LOGIN_TAG);
         mAvatarUrl=savedInstanceState.getString(AVATAR_TAG);
         mNavSearchText=savedInstanceState.getString(NAVIGATION_SEARCH_TAG);
         mMainSearchText=savedInstanceState.getString(MAIN_SEARCH_TAG);
-        mNavRecyclerViewScrollPosition=savedInstanceState.getInt(NAVIGATION_RECYCLERVIEW_POSITION);
-        onLoginDialogClosed(mLogin,mPassword,mAvatarUrl);
+        mMainPresenter.setMainSearchViewText(mMainSearchText);
+        //mNavRecyclerViewScrollPosition=savedInstanceState.getInt(NAVIGATION_RECYCLERVIEW_POSITION);
+        mLogged=savedInstanceState.getBoolean(LOGGED_TAG);
+        mMainRecyclerViewState=savedInstanceState.getParcelable(MAIN_RECYCLERVIEW_STATE_TAG);
+        mNavRecyclerViewState=savedInstanceState.getParcelable(NAVIGATION_RECYCLERVIEW_POSITION);
+        Log.v("onrestore",mNavSearchText+" "+mMainSearchText);
         if (mMainSearchText!=null){
             if (!mMainSearchText.isEmpty()) {
-                mMainPresenterImpl.mainSearchViewDataChanged(mMainSearchText);
+                mMainPresenter.mainSearchViewDataChanged(mMainSearchText);
             }
             else {
                 mMainSearchText = null;
-                onLoginDialogClosed(mLogin,mPassword,mAvatarUrl);
+                mMainPresenter.setMainSearchViewText(mMainSearchText);
             }
         }
+        mMainPresenter.setLoginForApplication(mLogin);
+        onLoginDialogClosed(mLogin,mAvatarUrl);
+        if (mNavSearchText!=null)
+            if(mNavSearchText.length()>minimumNavTextSearchSize) {
+                mMainPresenter.restoreData();
+            }
+
     }
 
     @Override
     public void setNavRecyclerViewAdapter(BaseAdapter adapter) {
-        Parcelable recyclerViewState=null;
         LinearLayoutManager linearLayoutManager;
         if(mNavRecyclerView==null) {
             linearLayoutManager = new LinearLayoutManager(this);
+            mNavRecyclerView =mNavigationView.getHeaderView(headerStartIndex).findViewById(R.id.nav_recyclerview);
         }
-        else linearLayoutManager=(LinearLayoutManager)mNavRecyclerView.getLayoutManager();
-
-        mNavRecyclerView =mNavigationView.getHeaderView(headerStartIndex).findViewById(R.id.nav_recyclerview);
+        else{
+            linearLayoutManager=(LinearLayoutManager)mNavRecyclerView.getLayoutManager();
+            mNavRecyclerViewState=linearLayoutManager.onSaveInstanceState();
+        }
         mNavRecyclerView.setLayoutManager(linearLayoutManager);
+
         if (adapter==null) {
-            mNavRecyclerViewScrollPosition=0;
+            mNavRecyclerViewState=null;
             mNavRecyclerView.setVisibility(View.GONE);
             return;
         }
-        recyclerViewState = linearLayoutManager.onSaveInstanceState();//save
+
         mNavRecyclerView.setAdapter(adapter);
-        if (recyclerViewState!=null)
-            linearLayoutManager.onRestoreInstanceState(recyclerViewState);//restore
-        if(mNavRecyclerViewScrollPosition!=0)
-            mNavRecyclerView.scrollToPosition(mNavRecyclerViewScrollPosition);
+        if (mNavRecyclerViewState!=null)
+            linearLayoutManager.onRestoreInstanceState(mNavRecyclerViewState);
+
         mNavRecyclerView.setVisibility(View.VISIBLE);
         mNavRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
@@ -298,7 +335,8 @@ public class MainActivity extends AppCompatActivity implements Constants,
                 super.onScrollStateChanged(recyclerView, newState);
                 
                 if (!recyclerView.canScrollVertically(1)) {
-                    mMainPresenterImpl.needMoreData();
+                    mMainPresenter.setNavSearchQuery(mNavSearchText);
+                    mMainPresenter.needMoreData();
                     showToast("fetching more data");
                 }
             }
@@ -306,17 +344,29 @@ public class MainActivity extends AppCompatActivity implements Constants,
     }
 
     public void setMainRecyclerViewAdapter (BaseAdapter adapter) {
-        mMainRecyclerView = findViewById(R.id.main_recyclerview);
-        mMainRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        LinearLayoutManager linearLayoutManager;
+        if (mMainRecyclerView==null) {
+            linearLayoutManager= new LinearLayoutManager(this);
+            mMainRecyclerView = findViewById(R.id.main_recyclerview);
+            mMainRecyclerView.setLayoutManager(linearLayoutManager);
+        }
+        else{
+            linearLayoutManager=(LinearLayoutManager) mMainRecyclerView.getLayoutManager();
+            mMainRecyclerViewState=linearLayoutManager.onSaveInstanceState();
+        }
         mMainRecyclerView.setAdapter(adapter);
+        if (mMainRecyclerViewState!=null) {
+            mMainRecyclerView.getLayoutManager().onRestoreInstanceState(mMainRecyclerViewState);
+        }
         mMainRecyclerView.setVisibility(View.VISIBLE);
     }
 
-   public void setNavRecyclerViewPosition(){
+
+ /*  public void setNavRecyclerViewPosition(){
         SearchView navSearch=mNavigationView.getHeaderView(headerStartIndex).findViewById(R.id.nav_search);
         float y = navSearch.getY()+navSearch.getHeight();
         mNavRecyclerView.setY(y+recyclerViewOffsetY);
-    }
+    }*/
 
     public void setUser(String login, String avatarUrl) {
         setNavigationViewItems();
@@ -329,11 +379,10 @@ public class MainActivity extends AppCompatActivity implements Constants,
 
     public void setUserAsGuest(){
         setNavigationViewItems();
-        loginItem.setVisible(true);
         logoutItem.setVisible(false);
+        loginItem.setVisible(true);
         mAvatarUrl=null;
-        mPassword=null;
-        mLogin=null;
+        mLogin=GUEST_LOGIN;
         mDrawerLayout.closeDrawers();
         mNavigationViewImageView.setImageResource(R.drawable.githublogo);
         mNavigationViewTextView.setText(GUEST_TEXT);
@@ -363,7 +412,7 @@ public class MainActivity extends AppCompatActivity implements Constants,
         builder.setTitle(title);
         builder.setPositiveButton(R.string.alert_ok, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
-                mMainPresenterImpl.confirmationClicked(tag);
+                mMainPresenter.confirmationClicked(tag);
             }
         });
         builder.setNegativeButton(R.string.alert_cancel, new DialogInterface.OnClickListener() {
@@ -375,19 +424,25 @@ public class MainActivity extends AppCompatActivity implements Constants,
     }
 
     @Override
-    public void onLoginDialogClosed(String login, String password,String avatarUrl) {
-
-            mLogin = login;
-            mPassword = password;
-            mAvatarUrl = avatarUrl;
-            mMainPresenterImpl.activityStarted(login, password, avatarUrl);
-
+    public void onLoginDialogClosed(String login, String avatarUrl) {
+        mLogged =true;
+        mLogin = login;
+        mAvatarUrl = avatarUrl;
+        mMainPresenter.activityStarted(login, avatarUrl);
     }
 
     public void gitHubUserActivityStart (String login){
         Intent intent = new Intent(this, GitHubUserDetailsActivity.class);
         intent.putExtra(GITHUBUSER_LOGIN,login);
         startActivity(intent);
+    }
 
+    public void newUserLoggedIn(){
+        mMainSearchText=null;
+        mMainPresenter.setMainSearchViewText(mMainSearchText);
+        mNavSearchText=null;
+        setNavSearchView();
+        setMainSearchView();
+        setNavRecyclerViewAdapter(null);
     }
 }

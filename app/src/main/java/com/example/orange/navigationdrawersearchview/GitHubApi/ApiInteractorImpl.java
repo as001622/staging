@@ -22,8 +22,8 @@ public class ApiInteractorImpl implements ApiInteractor,Constants{
     public static int mCurrentPage=firstPage;
     private int mLoadPerPage=loadPerPage;
 
-    public ApiInteractorImpl(String login,String password){
-        service = new ApiBuilder(login,password).getService();
+    public ApiInteractorImpl(){
+        service = new ApiBuilder().getService();
     }
 
     @Override
@@ -72,7 +72,6 @@ public class ApiInteractorImpl implements ApiInteractor,Constants{
                         listener.OnLoadDataResponseIsNotSuccesfull(ON403_MESSAGE);
                     else
                     {
-                        Log.v("call",call.toString());
                         listener.OnLoadDataResponseIsNotSuccesfull(response.message());
                     }
                 }
@@ -118,11 +117,9 @@ public class ApiInteractorImpl implements ApiInteractor,Constants{
             public void onResponse(Call<GitHubUser> call, Response<GitHubUser> response) {
                     if (response.isSuccessful())
                     {
-                        Log.v("neudacha",call.request().toString());
                         listener.OnUserDetailsRecievedIsSuccesfull(response.body());
                     }
                     else{
-                        Log.v("neudacha",call.request().toString());
                         listener.OnUserDetailsRecievedIsNotSuccesfull(response.message());
                     }
             }

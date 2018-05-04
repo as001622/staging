@@ -5,6 +5,7 @@ import com.example.orange.navigationdrawersearchview.NavRecyclerView.BaseAdapter
 public interface MainView {
     void showToast(String text);
     public void createLoginDialog();
+    public void newUserLoggedIn();
     void setNavSearchView();
     void setUser(String imageUrl,String login);
     void setUserAsGuest();
@@ -14,6 +15,6 @@ public interface MainView {
     void setMainSearchView();
     void gitHubUserActivityStart(String login);
     interface LoginDialogClosed{
-        void onLoginDialogClosed(String login, String password, String avatarUrl);
+        void onLoginDialogClosed(String login, String avatarUrl);
     }
 }

@@ -78,53 +78,64 @@ public class DatabaseInteractorImpl implements DatabaseInteractor{
         if (appUser!=null)
             for(User user:appUser.getDeletedUsers())
                 deletedGitHubUserList.add(getGitHubUser(user));
-        Log.v("deletedList",deletedGitHubUserList.toString());
         gitHubUserList.removeAll(deletedGitHubUserList);
-        Log.v("NavList",gitHubUserList.toString());
         return gitHubUserList;
     }
 
     public void insertNewUser(GitHubUser gitHubUser){
 
-        RealmList<User> addedUserList;
-        ApplicationUser appUser=mRealm
-                .where(ApplicationUser.class)
-                .equalTo(mUserLoginField,mLogin)
+        User checkUser= mRealm.where(User.class)
+                .equalTo(mAddedUserLoginField,mLogin)
+                .and()
+                .equalTo(mUserGitHubLoginField,gitHubUser.getLogin())
                 .findFirst();
-        if (appUser==null) {
-            appUser=new ApplicationUser();
-            appUser.setUserLogin(mLogin);
-            addedUserList=new RealmList<User>();
+        if (checkUser==null) {
+            RealmList<User> addedUserList;
+            ApplicationUser appUser = mRealm
+                    .where(ApplicationUser.class)
+                    .equalTo(mUserLoginField, mLogin)
+                    .findFirst();
+            if (appUser == null) {
+                appUser = new ApplicationUser();
+                appUser.setUserLogin(mLogin);
+                addedUserList = new RealmList<User>();
+            } else addedUserList = appUser.getAddedUsers();
+            mRealm.beginTransaction();
+            addedUserList.add(setUser(gitHubUser));
+            appUser.setAddedUsers(addedUserList);
+            mRealm.insertOrUpdate(appUser);
+            mRealm.commitTransaction();
+
         }
-        else  addedUserList= appUser.getAddedUsers();
-        mRealm.beginTransaction();
-        addedUserList.add(setUser(gitHubUser));
-        appUser.setAddedUsers(addedUserList);
-        mRealm.insertOrUpdate(appUser);
-        mRealm.commitTransaction();
-        getAllData("insertNew");
+
 
     }
     public void insertNewDeletedUser(GitHubUser gitHubUser){
 
-        RealmList<User> deletedUserList;
-        ApplicationUser appUser=mRealm
-                .where(ApplicationUser.class)
-                .equalTo(mUserLoginField,mLogin)
+        User checkUser= mRealm.where(User.class)
+                .equalTo(mAddedUserLoginField,mLogin)
+                .and()
+                .equalTo(mUserGitHubLoginField,gitHubUser.getLogin())
                 .findFirst();
-        if (appUser==null) {
-            appUser=new ApplicationUser();
-            appUser.setUserLogin(mLogin);
-            deletedUserList=new RealmList<User>();
-        }
-        else  deletedUserList= appUser.getDeletedUsers();
+        if (checkUser==null) {
+            RealmList<User> deletedUserList;
+            ApplicationUser appUser = mRealm
+                    .where(ApplicationUser.class)
+                    .equalTo(mUserLoginField, mLogin)
+                    .findFirst();
+            if (appUser == null) {
+                appUser = new ApplicationUser();
+                appUser.setUserLogin(mLogin);
+                deletedUserList = new RealmList<User>();
+            } else deletedUserList = appUser.getDeletedUsers();
 
-        mRealm.beginTransaction();
-        deletedUserList.add(setUser(gitHubUser));
-        appUser.setDeletedUsers(deletedUserList);
-        mRealm.insertOrUpdate(appUser);
-        mRealm.commitTransaction();
-        getAllData("insertNewDeleted");
+            mRealm.beginTransaction();
+            deletedUserList.add(setUser(gitHubUser));
+            appUser.setDeletedUsers(deletedUserList);
+            mRealm.insertOrUpdate(appUser);
+            mRealm.commitTransaction();
+        }
+
     }
 
     private User setUser(GitHubUser gitHubUser){
@@ -151,7 +162,7 @@ public class DatabaseInteractorImpl implements DatabaseInteractor{
                         .deleteFromRealm();
             }
         });
-        getAllData("deleteUser");
+
     }
 
     private GitHubUser getGitHubUser(User user){
@@ -190,22 +201,34 @@ public class DatabaseInteractorImpl implements DatabaseInteractor{
             appUser.setSavedUsers(savedUserList);
             mRealm.insertOrUpdate(appUser);
             mRealm.commitTransaction();
-            Log.v("SaveData",appUser.toString());
         }
+
 
     }
 
     public List<GitHubUser> restoreData(){
+
         List<GitHubUser> gitHubUserList = new ArrayList<>();
         ApplicationUser appUser = mRealm.where(ApplicationUser.class)
                 .equalTo(mUserLoginField,mLogin)
                 .findFirst();
-        Log.v("RestoreData",appUser.toString());
         if (appUser!=null)
             for(User user:appUser.getSavedUsers())
                 gitHubUserList.add(getGitHubUser(user));
-        Log.v("RestoreData",gitHubUserList.toString());
+
         return gitHubUserList;
+    }
+
+
+    public void clearSavedData(){
+        ApplicationUser appUser = mRealm.where(ApplicationUser.class)
+                .equalTo(mUserLoginField,mLogin)
+                .findFirst();
+        if (appUser!=null) {
+            mRealm.beginTransaction();
+            appUser.setSavedUsers(null);
+            mRealm.commitTransaction();
+        }
     }
 
     public String getLogin() {
